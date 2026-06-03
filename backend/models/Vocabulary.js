@@ -36,7 +36,7 @@ const Vocabulary = sequelize.define('Vocabulary', {
     defaultValue: 'General'
   },
   imageUrl: {
-    type: DataTypes.TEXT('medium'),
+    type: DataTypes.STRING(2083),
     defaultValue: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=500&auto=format&fit=crop&q=60'
   }
 });
