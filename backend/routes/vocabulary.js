@@ -1,0 +1,142 @@
+const express = require('express');
+const router = express.Router();
+const Vocabulary = require('../models/Vocabulary');
+const User = require('../models/User');
+const { protect } = require('../middleware/auth');
+const { Op } = require('sequelize');
+const sequelize = require('../config/database');
+
+// GET /api/vocabulary/themes — list unique themes with word count
+router.get('/themes', async (req, res) => {
+  try {
+    const themes = await Vocabulary.findAll({
+      attributes: [
+        'theme',
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+      ],
+      group: ['theme'],
+      order: [[sequelize.fn('COUNT', sequelize.col('id')), 'DESC']]
+    });
+    res.json(themes.map(t => ({ theme: t.theme, count: parseInt(t.dataValues.count) })));
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi lấy danh sách chủ đề', error: error.message });
+  }
+});
+
+// GET /api/vocabulary — with pagination + optional theme & search filter
+router.get('/', async (req, res) => {
+  try {
+    const page  = parseInt(req.query.page)  || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip  = (page - 1) * limit;
+    const theme  = req.query.theme  || null;
+    const search = req.query.search || null;
+
+    const where = {};
+    if (theme)  where.theme = theme;
+    if (search) {
+      where[Op.or] = [
+        { word:    { [Op.like]: `%${search}%` } },
+        { meaning: { [Op.like]: `%${search}%` } },
+      ];
+    }
+
+    const { rows: words, count: total } = await Vocabulary.findAndCountAll({
+      where,
+      limit,
+      offset: skip,
+      order: [['id', 'ASC']]
+    });
+
+    res.json({
+      words,
+      hasMore: total > skip + words.length,
+      total
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi lấy dữ liệu từ vựng', error: error.message });
+  }
+});
+
+// POST /api/vocabulary/favorite/:id — toggle favorite word
+router.post('/favorite/:id', protect, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+
+    const wordIdStr = req.params.id.toString();
+    let favorites = Array.isArray(user.favoriteWords) ? user.favoriteWords : [];
+    const hasWord = favorites.some(id => id.toString() === wordIdStr);
+
+    if (hasWord) {
+      favorites = favorites.filter(id => id.toString() !== wordIdStr);
+    } else {
+      favorites.push(parseInt(wordIdStr) || wordIdStr);
+    }
+
+    user.favoriteWords = favorites;
+    user.changed('favoriteWords', true);
+    await user.save();
+
+    res.json({ favoriteWords: user.favoriteWords });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi lưu từ vựng', error: error.message });
+  }
+});
+
+// GET /api/vocabulary/favorites — get all favorite words of the logged-in user (protected)
+router.get('/favorites', protect, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+
+    const favoriteIds = Array.isArray(user.favoriteWords) ? user.favoriteWords : [];
+    if (favoriteIds.length === 0) {
+      return res.json([]);
+    }
+
+    const words = await Vocabulary.findAll({
+      where: {
+        id: favoriteIds
+      },
+      order: [['id', 'ASC']]
+    });
+
+    res.json(words);
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi lấy danh sách từ vựng yêu thích', error: error.message });
+  }
+});
+
+// POST /api/vocabulary — create a new vocabulary word (protected)
+router.post('/', protect, async (req, res) => {
+  try {
+    const { word, ipa, meaning, type, example, theme, imageUrl } = req.body;
+    
+    if (!word || !ipa || !meaning || !type) {
+      return res.status(400).json({ message: 'Vui lòng điền đầy đủ các thông tin bắt buộc (Từ, IPA, Nghĩa, Loại từ)' });
+    }
+
+    // Kiểm tra xem từ đã tồn tại chưa
+    const existing = await Vocabulary.findOne({ where: { word: word.trim() } });
+    if (existing) {
+      return res.status(400).json({ message: 'Từ vựng này đã tồn tại trong cơ sở dữ liệu.' });
+    }
+
+    const newWord = await Vocabulary.create({
+      word: word.trim(),
+      ipa: ipa.trim(),
+      meaning: meaning.trim(),
+      type: type.toLowerCase().trim(),
+      example: example ? example.trim() : '',
+      theme: theme ? theme.trim() : 'General',
+      imageUrl: imageUrl ? imageUrl.trim() : 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=500&auto=format&fit=crop&q=60'
+    });
+
+    res.status(201).json({ message: 'Thêm từ vựng thành công!', word: newWord });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi thêm từ vựng', error: error.message });
+  }
+});
+
+module.exports = router;

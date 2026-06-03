@@ -1,0 +1,10 @@
+# Logs
+*.log
+npm-debug.log*
+
+node_modules
+
+# Environment variables — KHÔNG push lên GitHub
+.env
+.env.local
+.env.production
