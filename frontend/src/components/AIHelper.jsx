@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, X, Send, Mic, MicOff, Trash2 } from 'lucide-react';
+import { Bot, X, Send, Mic, MicOff, Trash2, Sparkles } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -8,82 +8,54 @@ import ReactMarkdown from 'react-markdown';
 
 const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
 
-/* ── Markdown component cho tin nhắn AI ──────────────────────────────────── */
+/* ── Markdown component ──────────────────────────────────────────────────── */
 const MarkdownMessage = ({ content }) => (
   <ReactMarkdown
     components={{
-      // Paragraph: remove extra margin
-      p: ({ children }) => (
-        <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>
-      ),
-      // Strong / bold
-      strong: ({ children }) => (
-        <strong className="text-[var(--color-primary)] font-bold">{children}</strong>
-      ),
-      // Emphasis / italic
-      em: ({ children }) => (
-        <em className="text-[var(--color-accent)] not-italic font-medium">{children}</em>
-      ),
-      // Unordered list
-      ul: ({ children }) => (
-        <ul className="my-2 space-y-1 pl-3">{children}</ul>
-      ),
-      // Ordered list
-      ol: ({ children }) => (
-        <ol className="my-2 space-y-1 pl-4 list-decimal">{children}</ol>
-      ),
-      // List item
+      p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed text-sm">{children}</p>,
+      strong: ({ children }) => <strong className="font-bold text-[var(--color-primary)]">{children}</strong>,
+      em: ({ children }) => <em className="italic font-medium">{children}</em>,
+      ul: ({ children }) => <ul className="my-2 space-y-1 pl-3">{children}</ul>,
+      ol: ({ children }) => <ol className="my-2 space-y-1 pl-4 list-decimal">{children}</ol>,
       li: ({ children }) => (
         <li className="flex gap-2 items-start text-sm">
           <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--color-primary)] shrink-0" />
           <span>{children}</span>
         </li>
       ),
-      // Inline code
       code: ({ inline, children }) =>
         inline ? (
-          <code className="bg-black/60 border border-[var(--color-primary)]/40 text-[var(--color-primary)] px-1.5 py-0.5 rounded text-[11px] font-mono">
+          <code className="bg-[var(--color-surface-border)]/50 text-[var(--color-primary)] px-1.5 py-0.5 rounded text-xs font-mono">
             {children}
           </code>
         ) : (
-          <pre className="my-2 p-3 bg-black/70 border border-[var(--color-dark-surface-border)] rounded-lg overflow-x-auto text-[11px] font-mono text-gray-300">
+          <pre className="my-2 p-3 bg-[var(--color-surface-border)]/30 rounded-xl overflow-x-auto text-xs font-mono text-[var(--color-text)]">
             <code>{children}</code>
           </pre>
         ),
-      // Headings
-      h1: ({ children }) => (
-        <h1 className="text-base font-black text-[var(--color-primary)] mb-2 uppercase tracking-wider">{children}</h1>
-      ),
-      h2: ({ children }) => (
-        <h2 className="text-sm font-bold text-[var(--color-accent)] mb-1.5 uppercase tracking-wide">{children}</h2>
-      ),
-      h3: ({ children }) => (
-        <h3 className="text-sm font-bold text-white mb-1">{children}</h3>
-      ),
-      // Blockquote
+      h1: ({ children }) => <h1 className="text-base font-bold text-[var(--color-primary)] mb-2 tracking-tight">{children}</h1>,
+      h2: ({ children }) => <h2 className="text-sm font-bold text-[var(--color-text)] mb-1.5">{children}</h2>,
+      h3: ({ children }) => <h3 className="text-sm font-semibold text-[var(--color-text-muted)] mb-1">{children}</h3>,
       blockquote: ({ children }) => (
-        <blockquote className="border-l-2 border-[var(--color-primary)] pl-3 my-2 text-gray-400 italic text-sm">
+        <blockquote className="border-l-2 border-[var(--color-primary)]/50 pl-3 my-2 italic text-sm text-[var(--color-text-muted)]">
           {children}
         </blockquote>
       ),
-      // Horizontal rule
-      hr: () => (
-        <hr className="my-3 border-[var(--color-dark-surface-border)]" />
-      ),
+      hr: () => <hr className="my-3 border-[var(--color-surface-border)]" />,
     }}
   >
     {content}
   </ReactMarkdown>
 );
 
-/* ── Main AIHelper component ─────────────────────────────────────────────── */
+/* ── AIHelper ────────────────────────────────────────────────────────────── */
 const AIHelper = () => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       role: 'ai',
-      text: '**Nexus AI Online** 🤖\n\nĐang khởi tạo liên kết nơ-ron... Xin chào chiến binh số! Tôi có thể giúp gì cho quá trình học ngôn ngữ của bạn hôm nay?'
+      text: '👋 **CyberLingo AI**\n\nXin chào! Tôi có thể giúp gì cho quá trình học ngôn ngữ của bạn hôm nay?'
     }
   ]);
   const [input, setInput] = useState('');
@@ -104,222 +76,173 @@ const AIHelper = () => {
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+    if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isOpen, isTyping]);
 
-  // Focus input when chat opens
   useEffect(() => {
-    if (isOpen) setTimeout(() => inputRef.current?.focus(), 200);
+    if (isOpen) setTimeout(() => inputRef.current?.focus(), 100);
   }, [isOpen]);
+
+  const toggleOpen = () => setIsOpen(!isOpen);
+  const clearChat = () => {
+    setMessages([{
+      role: 'ai',
+      text: 'Đã dọn dẹp bộ nhớ. Chúng ta bắt đầu lại nhé!'
+    }]);
+    toast.success('Đã xóa lịch sử chat');
+  };
 
   const handleSend = () => {
     if (!input.trim()) return;
-    const userMsg = input.trim();
-    setMessages((prev) => [...prev, { role: 'user', text: userMsg }]);
+    const userMsg = { role: 'user', text: input.trim() };
+    setMessages((prev) => [...prev, userMsg]);
+    socket.emit('chat_message', { userId: user?.id || 'guest', message: input.trim() });
     setInput('');
-    socket.emit('user_message', {
-      message: userMsg,
-      userId: user?.id || null
-    });
   };
 
-  const handleClear = () => {
-    setMessages([
-      {
-        role: 'ai',
-        text: '**Bộ nhớ đã được xóa sạch.** Phiên làm việc mới bắt đầu. Tôi có thể giúp gì cho bạn?'
-      }
-    ]);
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   const toggleListen = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      toast.error('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói.');
+    if (isListening) {
+      setIsListening(false);
       return;
     }
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói');
+      return;
+    }
     const recognition = new SpeechRecognition();
     recognition.lang = 'vi-VN';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    if (isListening) {
-      recognition.stop();
-      setIsListening(false);
-    } else {
-      recognition.start();
-      setIsListening(true);
-      recognition.onresult = (event) => {
-        setInput(event.results[0][0].transcript);
-        setIsListening(false);
-      };
-      recognition.onerror = (event) => {
-        setIsListening(false);
-        toast.error('Lỗi nhận diện giọng nói: ' + event.error);
-      };
-      recognition.onend = () => setIsListening(false);
-    }
+    recognition.continuous = false;
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (e) => setInput(prev => prev + ' ' + e.results[0][0].transcript);
+    recognition.onerror = () => { setIsListening(false); toast.error('Lỗi nhận diện giọng nói'); };
+    recognition.onend = () => setIsListening(false);
+    recognition.start();
   };
 
   return (
     <>
-      {/* ── Floating trigger button ── */}
+      {/* Floating Toggle Button */}
       <motion.button
-        id="ai-helper-trigger"
-        className="fixed bottom-8 right-8 w-14 h-14 rounded-full glass-panel flex items-center justify-center z-50 group hover:bg-[var(--color-primary)] transition-all duration-300"
-        style={{ animation: 'var(--animate-float)' }}
-        onClick={() => setIsOpen(true)}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={toggleOpen}
+        className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] text-white shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group"
       >
-        <Bot className="w-7 h-7 text-[var(--color-primary)] group-hover:text-black transition-colors" />
-        <span className="absolute w-full h-full rounded-full border border-[var(--color-primary)] animate-ping opacity-40" />
+        <Bot className="w-6 h-6 animate-pulse-slow" />
+        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-300 font-medium text-sm">
+          Hỏi AI Ngay
+        </span>
       </motion.button>
 
-      {/* ── Chat panel ── */}
+      {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            id="ai-helper-panel"
-            initial={{ opacity: 0, y: 40, scale: 0.92 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.92 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="fixed bottom-28 right-8 w-[360px] md:w-[440px] glass-panel flex flex-col overflow-hidden z-50 border border-[var(--color-primary)]/50 shadow-[0_0_40px_rgba(0,240,255,0.15)]"
-            style={{ height: '560px' }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ type: 'spring', bounce: 0.25, duration: 0.5 }}
+            className="fixed bottom-24 right-6 z-50 w-[350px] sm:w-[400px] h-[550px] max-h-[80vh] flex flex-col bg-[var(--color-surface)] border border-[var(--color-surface-border)] rounded-2xl shadow-2xl overflow-hidden"
           >
             {/* Header */}
-            <div className="shrink-0 bg-gradient-to-r from-[var(--color-primary)]/15 to-transparent p-4 border-b border-[var(--color-primary)]/40 flex justify-between items-center">
+            <div className="px-5 py-4 border-b border-[var(--color-surface-border)] bg-[var(--color-surface)]/80 backdrop-blur-md flex justify-between items-center shrink-0">
               <div className="flex items-center gap-3">
-                {/* Animated bot icon */}
-                <div className="relative w-8 h-8 flex items-center justify-center">
-                  <div className="absolute inset-0 rounded-full bg-[var(--color-primary)] blur-md opacity-30" />
-                  <Bot className="w-5 h-5 text-[var(--color-primary)] relative z-10" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] p-0.5 shadow-sm">
+                  <div className="w-full h-full bg-[var(--color-surface)] rounded-[10px] flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-[var(--color-primary)]" />
+                  </div>
                 </div>
                 <div>
-                  <h3 className="font-mono font-black text-[var(--color-primary)] tracking-widest uppercase text-sm leading-none">
-                    Nexus AI
-                  </h3>
-                  <p className="text-[10px] text-green-400 font-mono flex items-center gap-1 mt-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
-                    ONLINE · Học tiếng Anh Cyberpunk
+                  <h3 className="font-bold text-[var(--color-text)] leading-tight">CyberLingo AI</h3>
+                  <p className="text-[10px] text-[var(--color-primary)] font-medium flex items-center gap-1 mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)] animate-pulse" />
+                    Đang hoạt động
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleClear}
-                  title="Xóa cuộc trò chuyện"
-                  className="text-gray-500 hover:text-[var(--color-secondary)] transition-colors p-1 rounded"
-                >
+              <div className="flex items-center gap-1">
+                <button onClick={clearChat} className="p-2 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-colors" title="Xóa lịch sử">
                   <Trash2 className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="text-gray-500 hover:text-white transition-colors p-1 rounded"
-                >
+                <button onClick={toggleOpen} className="p-2 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-border)] transition-colors">
                   <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-black/50">
-              {messages.map((msg, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 8, x: msg.role === 'user' ? 10 : -10 }}
-                  animate={{ opacity: 1, y: 0, x: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2`}
-                >
-                  {/* AI avatar dot */}
-                  {msg.role === 'ai' && (
-                    <div className="shrink-0 w-6 h-6 rounded-full bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/50 flex items-center justify-center mb-0.5">
-                      <Bot className="w-3.5 h-3.5 text-[var(--color-primary)]" />
-                    </div>
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-[var(--color-bg)]/50 custom-scrollbar">
+              {messages.map((msg, idx) => (
+                <div key={idx} className={`flex flex-col max-w-[85%] ${msg.role === 'user' ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
+                  {msg.role === 'ai' && idx > 0 && messages[idx - 1]?.role !== 'ai' && (
+                    <span className="text-[10px] font-medium text-[var(--color-text-muted)] mb-1 ml-1">AI Assistant</span>
                   )}
-
                   <div
-                    className={`max-w-[85%] rounded-2xl text-sm font-mono ${
+                    className={`p-3.5 rounded-2xl shadow-sm ${
                       msg.role === 'user'
-                        ? 'bg-[var(--color-primary)] text-black px-4 py-2.5 rounded-br-sm shadow-[0_0_12px_rgba(0,240,255,0.25)] font-medium'
-                        : 'bg-[#111]/90 border border-white/8 text-gray-200 px-4 py-3 rounded-bl-sm'
+                        ? 'bg-[var(--color-primary)] text-white rounded-tr-sm'
+                        : 'bg-[var(--color-surface)] border border-[var(--color-surface-border)] text-[var(--color-text)] rounded-tl-sm'
                     }`}
                   >
-                    {msg.role === 'ai' ? (
-                      <MarkdownMessage content={msg.text} />
+                    {msg.role === 'user' ? (
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text}</p>
                     ) : (
-                      <span>{msg.text}</span>
+                      <MarkdownMessage content={msg.text} />
                     )}
                   </div>
-                </motion.div>
+                </div>
               ))}
-
-              {/* Typing indicator */}
               {isTyping && (
-                <motion.div
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-end gap-2 justify-start"
-                >
-                  <div className="w-6 h-6 rounded-full bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/50 flex items-center justify-center">
-                    <Bot className="w-3.5 h-3.5 text-[var(--color-primary)]" />
-                  </div>
-                  <div className="bg-[#111]/90 border border-white/8 px-4 py-3 rounded-2xl rounded-bl-sm flex gap-1.5 items-center h-10">
-                    {[0, 0.15, 0.3].map((delay, i) => (
-                      <motion.span
-                        key={i}
-                        className="w-2 h-2 bg-[var(--color-primary)] rounded-full"
-                        animate={{ y: [0, -5, 0] }}
-                        transition={{ duration: 0.6, repeat: Infinity, delay }}
-                      />
-                    ))}
-                  </div>
-                </motion.div>
+                <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-xs font-medium p-3 bg-[var(--color-surface)] border border-[var(--color-surface-border)] rounded-2xl rounded-tl-sm w-max shadow-sm">
+                  <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-current rounded-full" />
+                  <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-current rounded-full" />
+                  <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-current rounded-full" />
+                </div>
               )}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input bar */}
-            <div className="shrink-0 p-3 border-t border-white/8 bg-[#060606]">
-              <div className="flex gap-2 items-center">
-                {/* Mic button */}
-                <button
-                  onClick={toggleListen}
-                  title={isListening ? 'Dừng ghi âm' : 'Nhập bằng giọng nói'}
-                  className={`shrink-0 p-2.5 rounded-xl border transition-all duration-200 ${
-                    isListening
-                      ? 'bg-red-500/20 text-red-400 border-red-500 animate-pulse'
-                      : 'bg-white/5 text-gray-500 border-white/10 hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]'
-                  }`}
-                >
-                  {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                </button>
-
-                {/* Text input */}
-                <input
+            {/* Input Area */}
+            <div className="p-4 bg-[var(--color-surface)] border-t border-[var(--color-surface-border)] shrink-0">
+              <div className="relative flex items-center bg-[var(--color-bg)] rounded-xl border border-[var(--color-surface-border)] focus-within:border-[var(--color-primary)] focus-within:ring-1 focus-within:ring-[var(--color-primary)] transition-all">
+                <textarea
                   ref={inputRef}
-                  type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-                  placeholder={isListening ? '🎙️ Đang nghe...' : 'Nhắn tin với Nexus AI...'}
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-[var(--color-primary)]/60 font-mono transition-colors"
+                  onKeyDown={handleKeyPress}
+                  placeholder="Nhập câu hỏi của bạn..."
+                  className="flex-1 bg-transparent text-[var(--color-text)] text-sm p-3 max-h-32 focus:outline-none resize-none custom-scrollbar"
+                  rows={1}
                 />
-
-                {/* Send button */}
-                <button
-                  onClick={handleSend}
-                  disabled={!input.trim()}
-                  className="shrink-0 bg-[var(--color-primary)] disabled:opacity-30 disabled:cursor-not-allowed text-black p-2.5 rounded-xl hover:bg-white transition-all duration-200 hover:scale-105"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1 pr-2">
+                  <button
+                    onClick={toggleListen}
+                    className={`p-2 rounded-lg transition-colors ${
+                      isListening ? 'text-[var(--color-danger)] bg-[var(--color-danger)]/10 animate-pulse' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-border)]/50'
+                    }`}
+                    title="Nhập bằng giọng nói"
+                  >
+                    {isListening ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+                  </button>
+                  <button
+                    onClick={handleSend}
+                    disabled={!input.trim()}
+                    className="p-2 rounded-lg text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              <p className="text-[10px] text-gray-700 font-mono text-center mt-2">
-                Nexus AI · Powered by Google Gemini
-              </p>
             </div>
           </motion.div>
         )}

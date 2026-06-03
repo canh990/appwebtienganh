@@ -571,13 +571,13 @@ const StudySession = ({ theme, themeColor, onExit }) => {
 ═══════════════════════════════════════════════════════════════════════════ */
 const ThemeSelector = ({ themes, onSelectTheme, totalWords }) => {
   if (themes.length === 0) return (
-    <div className="text-center py-12">
-      <p className="text-gray-500 font-mono">Chưa có chủ đề nào. Hãy sinh từ vựng trước.</p>
+    <div className="text-center py-20 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-surface-border)]">
+      <p className="text-[var(--color-text-muted)] font-medium">Chưa có chủ đề nào. Hãy sinh từ vựng trước.</p>
     </div>
   );
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
       {themes.map(({ theme, count }, i) => {
         const cfg = getThemeConfig(theme);
         return (
@@ -585,45 +585,41 @@ const ThemeSelector = ({ themes, onSelectTheme, totalWords }) => {
             key={theme}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.06 }}
-            whileHover={{ scale: 1.03, y: -2 }}
-            whileTap={{ scale: 0.97 }}
+            transition={{ delay: i * 0.05 }}
+            whileHover={{ y: -4, shadow: 'md' }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => onSelectTheme(theme, cfg.color)}
-            className="glass-panel p-5 text-left rounded-2xl border border-white/8 hover:border-opacity-60 transition-all duration-200 group relative overflow-hidden"
-            style={{ '--theme-color': cfg.color }}
+            className="glass-panel p-6 text-left rounded-2xl border border-[var(--color-surface-border)] hover:border-[var(--color-primary)]/50 transition-all duration-300 group relative overflow-hidden bg-[var(--color-surface)]"
           >
-            {/* Glow background */}
+            {/* Soft background glow */}
             <div
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              style={{ background: `radial-gradient(circle at 30% 30%, ${cfg.color}15, transparent 60%)` }}
+              className="absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl pointer-events-none"
+              style={{ background: cfg.color }}
             />
-            {/* Top border accent */}
-            <div className="absolute top-0 left-0 right-0 h-0.5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: cfg.color }} />
 
             <div className="relative z-10">
-              <div className="text-3xl mb-3">{cfg.emoji}</div>
-              <h3
-                className="font-black font-mono uppercase tracking-widest text-sm mb-1 group-hover:opacity-100 transition-colors"
-                style={{ color: cfg.color }}
-              >
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 shadow-sm transition-transform duration-300 group-hover:scale-110" style={{ background: `${cfg.color}15` }}>
+                {cfg.emoji}
+              </div>
+              <h3 className="font-bold text-lg mb-1 text-[var(--color-text)] transition-colors">
                 {theme}
               </h3>
-              <p className="text-gray-500 text-xs font-mono">{count} từ vựng</p>
+              <p className="text-[var(--color-text-muted)] text-xs font-medium mb-4">{count} từ vựng</p>
 
               {/* Progress bar */}
-              <div className="mt-3 w-full h-1 bg-white/10 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-[var(--color-surface-border)] rounded-full overflow-hidden">
                 <motion.div
                   className="h-full rounded-full"
                   style={{ background: cfg.color, width: `${Math.min(100, (count / Math.max(totalWords, 1)) * 400)}%` }}
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(100, (count / Math.max(totalWords, 1)) * 400)}%` }}
-                  transition={{ duration: 0.8, delay: i * 0.06 + 0.3 }}
+                  transition={{ duration: 0.8, delay: i * 0.05 + 0.2 }}
                 />
               </div>
 
-              <div className="mt-3 flex items-center gap-1 text-[10px] font-mono opacity-0 group-hover:opacity-100 transition-opacity">
-                <GraduationCap className="w-3 h-3" style={{ color: cfg.color }} />
-                <span style={{ color: cfg.color }}>Học ngay →</span>
+              <div className="mt-4 flex items-center gap-1.5 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: cfg.color }}>
+                <GraduationCap className="w-4 h-4" />
+                <span>Bắt đầu học</span>
               </div>
             </div>
           </motion.button>
