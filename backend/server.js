@@ -18,7 +18,9 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  process.env.FRONTEND_URL, // URL Vercel (đặt trong Railway env)
+  'https://fe2apptienganh.vercel.app',
+  'https://frontend-rho-orpin-80.vercel.app',
+  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(u => u.trim()) : []),
 ].filter(Boolean);
 
 app.use(cors({
