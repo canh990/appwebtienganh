@@ -46,6 +46,13 @@ const connectDB = async () => {
     await sequelize.authenticate();
     console.log('✅ Kết nối cơ sở dữ liệu MySQL thành công!');
     
+    // Define associations
+    const User = require('./models/User');
+    const CommunityMessage = require('./models/CommunityMessage');
+    
+    User.hasMany(CommunityMessage, { foreignKey: 'userId' });
+    CommunityMessage.belongsTo(User, { foreignKey: 'userId' });
+
     // Sync models
     await sequelize.sync({ alter: true });
     console.log('⚡ Tất cả các bảng cơ sở dữ liệu đã được đồng bộ hóa.');
@@ -85,6 +92,7 @@ const io = new Server(server, {
 });
 
 require('./sockets/chatSocket')(io);
+require('./sockets/communitySocket')(io);
 
 server.listen(PORT, () => {
   console.log(`[CyberLingo] Server đang chạy ở port ${PORT} với Realtime Sockets`);

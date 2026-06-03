@@ -9,6 +9,7 @@ import Vocabulary from './pages/Vocabulary';
 import Quiz from './pages/Quiz';
 import Auth from './pages/Auth';
 import Chat from './pages/Chat';
+import CommunityChat from './pages/CommunityChat';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
             <Route path="/vocabulary" element={<Vocabulary />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/community-chat" element={<CommunityChat />} />
           </Routes>
         </AnimatePresence>
       </MainLayout>
