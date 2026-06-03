@@ -5,12 +5,19 @@ const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const sequelize = require('../config/database');
 
-// Get random quizzes
+// Get random quizzes with optional filters: ?limit=10&type=multiple_choice
 router.get('/random', async (req, res) => {
   try {
+    const limit = Math.min(parseInt(req.query.limit) || 10, 30);
+    const type = req.query.type;
+
+    const where = {};
+    if (type && type !== 'all') where.type = type;
+
     const quizzes = await Quiz.findAll({
+      where,
       order: sequelize.random(),
-      limit: 10
+      limit
     });
     res.json(quizzes);
   } catch (error) {
@@ -21,32 +28,34 @@ router.get('/random', async (req, res) => {
 // Submit quiz results
 router.post('/submit', protect, async (req, res) => {
   try {
-    const { score, total } = req.body;
+    const { score, total, streak } = req.body;
     const user = await User.findByPk(req.user.id);
     if (!user) {
       return res.status(404).json({ message: 'Không tìm thấy người dùng' });
     }
-    
-    // Giả sử mỗi câu đúng được 20 XP
-    const earnedXp = score * 20;
+
+    // Base XP: 20 per correct, bonus 50 XP for streak >= 5, 100 XP for perfect score
+    let earnedXp = score * 20;
+    if (streak && streak >= 5) earnedXp += 50;
+    if (score === total && total > 0) earnedXp += 100;
+
     user.xp = (user.xp || 0) + earnedXp;
-    
-    const stats = user.stats || { totalQuizzesTaken: 0, highestScore: 0 };
+
+    const stats = user.stats || { totalQuizzesTaken: 0, highestScore: 0, totalCorrect: 0 };
     stats.totalQuizzesTaken = (stats.totalQuizzesTaken || 0) + 1;
+    stats.totalCorrect = (stats.totalCorrect || 0) + score;
     if (score > (stats.highestScore || 0)) {
       stats.highestScore = score;
     }
     user.stats = stats;
     user.changed('stats', true);
-    
-    // Level up logic (1000 XP per level)
+
     const newLevel = Math.floor(user.xp / 1000) + 1;
     if (newLevel > (user.level || 1)) {
       user.level = newLevel;
     }
-    
+
     await user.save();
-    
     res.json({ message: 'Đã lưu kết quả', xp: user.xp, level: user.level, earnedXp });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi lưu điểm', error: error.message });

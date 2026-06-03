@@ -8,6 +8,7 @@ import Profile from './pages/Profile';
 import Vocabulary from './pages/Vocabulary';
 import Quiz from './pages/Quiz';
 import Auth from './pages/Auth';
+import Chat from './pages/Chat';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/vocabulary" element={<Vocabulary />} />
             <Route path="/quiz" element={<Quiz />} />
+            <Route path="/chat" element={<Chat />} />
           </Routes>
         </AnimatePresence>
       </MainLayout>

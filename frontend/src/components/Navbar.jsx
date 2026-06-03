@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Terminal, Book, BrainCircuit, User, Zap, LogOut } from 'lucide-react';
+import { Terminal, Book, User, Zap, LogOut, Bot } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 
@@ -17,6 +17,7 @@ const Navbar = () => {
     { path: '/dashboard', name: 'Thống kê', icon: <User className="w-5 h-5" /> },
     { path: '/vocabulary', name: 'Từ vựng', icon: <Book className="w-5 h-5" /> },
     { path: '/quiz', name: 'Trắc nghiệm', icon: <Zap className="w-5 h-5" /> },
+    { path: '/chat', name: 'Chat AI', icon: <Bot className="w-5 h-5" /> },
   ];
 
   return (

@@ -19,11 +19,24 @@ module.exports = (io) => {
           await new Promise((r) => setTimeout(r, 800));
         } else {
           try {
-            const prompt = `Bạn là Nexus AI, một trợ lý học tiếng Anh đến từ tương lai Cyberpunk.
-Người dùng nói: "${message}".
-Hãy phản hồi hoàn toàn bằng Tiếng Việt với giọng điệu đậm chất viễn tưởng/cyberpunk (ngắn gọn, ngầu, hiện đại). Nếu câu nói của họ có tiếng Anh hoặc họ hỏi về tiếng Anh, hãy giải thích và sửa lỗi bằng tiếng Việt một cách dễ hiểu.`;
+            // Build conversation history context (last 6 messages for context)
+            let historyContext = '';
+            if (userId) {
+              try {
+                const history = await ChatHistory.findOne({ where: { userId: parseInt(userId) || userId } });
+                if (history && Array.isArray(history.messages) && history.messages.length > 0) {
+                  const recent = history.messages.slice(-6);
+                  historyContext = '\n\nLịch sử hội thoại gần đây:\n' + recent.map(m =>
+                    `${m.role === 'user' ? 'Người dùng' : 'Nexus AI'}: ${m.text.substring(0, 200)}`
+                  ).join('\n');
+                }
+              } catch (histErr) {
+                // Ignore history errors, continue without context
+              }
+            }
 
-            reply = await generateWithFallback(prompt, apiKey);
+            const fullPrompt = message + historyContext;
+            reply = await generateWithFallback(fullPrompt, apiKey);
           } catch (aiErr) {
             console.error('[Socket] Lỗi gọi Gemini (tất cả models đều thất bại):', aiErr.message);
             reply = '⚠️ Trung tâm AI đang quá tải. Vui lòng thử lại sau vài giây.';
@@ -33,7 +46,7 @@ Hãy phản hồi hoàn toàn bằng Tiếng Việt với giọng điệu đậm
         socket.emit('bot_typing', false);
         socket.emit('bot_reply', { text: reply });
 
-        // Lưu vào ChatHistory DB nếu userId tồn tại
+        // Save to ChatHistory DB
         if (userId) {
           try {
             let [history] = await ChatHistory.findOrCreate({
@@ -44,8 +57,10 @@ Hãy phản hồi hoàn toàn bằng Tiếng Việt với giọng điệu đậm
             let messages = history.messages || [];
             if (!Array.isArray(messages)) messages = [];
 
+            // Keep only last 50 messages to prevent DB bloat
             messages.push({ role: 'user', text: message });
             messages.push({ role: 'ai', text: reply });
+            if (messages.length > 50) messages = messages.slice(-50);
 
             history.messages = messages;
             history.changed('messages', true);
@@ -58,6 +73,20 @@ Hãy phản hồi hoàn toàn bằng Tiếng Việt với giọng điệu đậm
         console.error('[Socket] Lỗi Socket Chat:', error);
         socket.emit('bot_typing', false);
         socket.emit('bot_reply', { text: 'Mạch liên kết bị đứt đoạn. Vui lòng thử lại.' });
+      }
+    });
+
+    // Load chat history for user
+    socket.on('load_history', async (data) => {
+      const { userId } = data;
+      if (!userId) return;
+      try {
+        const history = await ChatHistory.findOne({ where: { userId: parseInt(userId) || userId } });
+        if (history && Array.isArray(history.messages)) {
+          socket.emit('chat_history', { messages: history.messages.slice(-20) });
+        }
+      } catch (err) {
+        console.error('[Socket] Lỗi load history:', err.message);
       }
     });
 
