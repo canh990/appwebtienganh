@@ -4,6 +4,10 @@ export const useTimer = (initialTime, onTimeout, isActive) => {
   const [timeLeft, setTimeLeft] = useState(initialTime);
 
   useEffect(() => {
+    setTimeLeft(initialTime);
+  }, [initialTime]);
+
+  useEffect(() => {
     if (!isActive) return;
 
     const timer = setInterval(() => {
@@ -18,7 +22,7 @@ export const useTimer = (initialTime, onTimeout, isActive) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isActive, onTimeout]);
+  }, [isActive, onTimeout, initialTime]);
 
   const resetTimer = () => setTimeLeft(initialTime);
 

@@ -134,7 +134,7 @@ const QuickAction = ({ icon, label, to, color, onClick, delay = 0 }) => {
 
 // ─── Skeleton loader ─────────────────────────────────────────────────────────
 const Skeleton = ({ className }) => (
-  <div className={`bg-[var(--color-surface-border)] rounded-2xl animate-pulse ${className}`} />
+  <div className={`skeleton ${className}`} />
 );
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
@@ -174,6 +174,42 @@ const Dashboard = () => {
 
     fetchAll();
   }, [authUser]);
+
+  useEffect(() => {
+    if (!stats) return;
+    const currentXp = stats.xp ?? 0;
+    try {
+      const lastTotalXp = parseInt(localStorage.getItem('cyberlingo_last_total_xp') || '-1');
+      if (lastTotalXp !== -1) {
+        if (currentXp > lastTotalXp) {
+          const gained = currentXp - lastTotalXp;
+          const todayStr = new Date().toISOString().split('T')[0];
+          const dailyXpMap = JSON.parse(localStorage.getItem('cyberlingo_daily_xp') || '{}');
+          dailyXpMap[todayStr] = (dailyXpMap[todayStr] || 0) + gained;
+          localStorage.setItem('cyberlingo_daily_xp', JSON.stringify(dailyXpMap));
+        }
+      }
+      localStorage.setItem('cyberlingo_last_total_xp', currentXp.toString());
+    } catch { /* silent */ }
+  }, [stats]);
+
+  const getWeeklyXP = () => {
+    try {
+      const dailyXP = JSON.parse(localStorage.getItem('cyberlingo_daily_xp') || '{}');
+      const curr = new Date();
+      const first = curr.getDate() - curr.getDay() + (curr.getDay() === 0 ? -6 : 1);
+      const weeklyData = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(curr);
+        d.setDate(first + i);
+        const dateStr = d.toISOString().split('T')[0];
+        weeklyData.push(dailyXP[dateStr] || 0);
+      }
+      return weeklyData;
+    } catch {
+      return [0, 0, 0, 0, 0, 0, 0];
+    }
+  };
 
   const handleAI = async () => {
     setAiLoading(true);
@@ -346,41 +382,45 @@ const Dashboard = () => {
             <Skeleton className="h-56 w-full" />
           ) : (
             <>
-              <div className="h-52 flex items-end justify-between gap-3 md:gap-6 border-b-2 border-[var(--color-surface-border)] relative pb-2 pt-6">
-                {['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'].map((day, i) => {
-                  const base = (xp % 100) || 30;
-                  const heights = [
-                    Math.min(95, base * 0.6), Math.min(95, base * 1.1), Math.min(95, base * 0.75),
-                    Math.min(95, base * 1.3), Math.min(95, base * 0.9), Math.min(95, base * 1.2), Math.min(95, base * 1.5),
-                  ];
-                  const h = Math.round(heights[i]);
-                  const currentDayIdx = new Date().getDay() - 1;
-                  const isToday = i === (currentDayIdx < 0 ? 6 : currentDayIdx);
-                  return (
-                    <div key={i} className="flex-1 flex flex-col items-center justify-end h-full gap-2 group cursor-pointer relative">
-                      <div className="absolute -top-8 bg-[var(--color-text)] text-[var(--color-bg)] text-[10px] font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                        {h * 10} XP
-                      </div>
-                      <motion.div
-                        className={`w-full rounded-t-lg ${isToday ? 'bg-[var(--color-primary)] shadow-sm' : 'bg-sky-200 dark:bg-slate-700 group-hover:bg-sky-300 dark:group-hover:bg-slate-600'} transition-colors`}
-                        initial={{ height: 0 }}
-                        animate={{ height: `${h}%` }}
-                        transition={{ delay: i * 0.08, duration: 0.6, ease: 'easeOut' }}
-                        style={{ minHeight: '8px' }}
-                      />
+              {(() => {
+                const weeklyXPData = getWeeklyXP();
+                const maxWeeklyXP = Math.max(...weeklyXPData, 50);
+                return (
+                  <>
+                    <div className="h-52 flex items-end justify-between gap-3 md:gap-6 border-b-2 border-[var(--color-surface-border)] relative pb-2 pt-6">
+                      {['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'].map((day, i) => {
+                        const xpEarned = weeklyXPData[i];
+                        const h = Math.max(8, Math.min(95, (xpEarned / maxWeeklyXP) * 95));
+                        const currentDayIdx = new Date().getDay() - 1;
+                        const isToday = i === (currentDayIdx < 0 ? 6 : currentDayIdx);
+                        return (
+                          <div key={i} className="flex-1 flex flex-col items-center justify-end h-full gap-2 group cursor-pointer relative">
+                            <div className="absolute -top-8 bg-[var(--color-text)] text-[var(--color-bg)] text-[10px] font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                              {xpEarned} XP
+                            </div>
+                            <motion.div
+                              className={`w-full rounded-t-lg ${isToday ? 'bg-[var(--color-primary)] shadow-sm' : 'bg-sky-200 dark:bg-slate-700 group-hover:bg-sky-300 dark:group-hover:bg-slate-600'} transition-colors`}
+                              initial={{ height: 0 }}
+                              animate={{ height: `${h}%` }}
+                              transition={{ delay: i * 0.08, duration: 0.6, ease: 'easeOut' }}
+                              style={{ minHeight: '8px' }}
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
-              <div className="flex justify-between mt-3 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] px-1">
-                {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((d, i) => {
-                  const currentDayIdx = new Date().getDay() - 1;
-                  const isToday = i === (currentDayIdx < 0 ? 6 : currentDayIdx);
-                  return (
-                    <span key={i} className={`flex-1 text-center py-1 rounded-lg ${isToday ? 'text-[var(--color-primary)] font-black bg-sky-50 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-900' : ''}`}>{d}</span>
-                  );
-                })}
-              </div>
+                    <div className="flex justify-between mt-3 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] px-1">
+                      {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((d, i) => {
+                        const currentDayIdx = new Date().getDay() - 1;
+                        const isToday = i === (currentDayIdx < 0 ? 6 : currentDayIdx);
+                        return (
+                          <span key={i} className={`flex-1 text-center py-1 rounded-lg ${isToday ? 'text-[var(--color-primary)] font-black bg-sky-50 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-900' : ''}`}>{d}</span>
+                        );
+                      })}
+                    </div>
+                  </>
+                );
+              })()}
             </>
           )}
         </div>

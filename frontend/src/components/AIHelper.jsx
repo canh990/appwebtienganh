@@ -52,6 +52,7 @@ const MarkdownMessage = ({ content }) => (
 const AIHelper = () => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [bannerVisible, setBannerVisible] = useState(false);
   const [messages, setMessages] = useState([
     {
       role: 'ai',
@@ -73,6 +74,13 @@ const AIHelper = () => {
       socket.off('bot_typing');
       socket.off('bot_reply');
     };
+  }, []);
+
+  /* ── Lắng nghe quiz answer banner ── */
+  useEffect(() => {
+    const handler = (e) => setBannerVisible(e.detail?.visible ?? false);
+    window.addEventListener('quiz:answerBanner', handler);
+    return () => window.removeEventListener('quiz:answerBanner', handler);
   }, []);
 
   useEffect(() => {
@@ -129,17 +137,60 @@ const AIHelper = () => {
 
   return (
     <>
-      {/* Floating Toggle Button */}
-      <motion.button
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.92 }}
+      {/* Floating Toggle Button — dùng CSS transition thuần cho bottom */}
+      <button
         onClick={toggleOpen}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center cursor-pointer"
+        className="fixed right-5 z-[9999] flex items-center justify-center cursor-pointer"
+        style={{
+          bottom: bannerVisible ? '150px' : '24px',
+          transition: 'bottom 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          filter: 'drop-shadow(0 4px 16px rgba(99,102,241,0.45))',
+          border: 'none',
+          background: 'none',
+          padding: 0,
+        }}
       >
-        <Bot className="w-7 h-7" />
-      </motion.button>
+        {/* Pulse ring */}
+        {!isOpen && (
+          <span
+            className="absolute rounded-full animate-ping"
+            style={{
+              width: '56px', height: '56px',
+              background: 'var(--color-primary)',
+              opacity: 0.25,
+            }}
+          />
+        )}
+        {/* Button circle */}
+        <span
+          className="relative w-14 h-14 rounded-full flex items-center justify-center text-white overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
+            boxShadow: isOpen
+              ? '0 0 0 3px var(--color-primary), 0 8px 24px rgba(99,102,241,0.4)'
+              : '0 4px 20px rgba(99,102,241,0.5)',
+            transition: 'box-shadow 0.2s ease',
+          }}
+        >
+          <AnimatePresence mode="wait">
+            {isOpen ? (
+              <motion.span key="close"
+                initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}
+                transition={{ duration: 0.18 }}
+              >
+                <X className="w-6 h-6" />
+              </motion.span>
+            ) : (
+              <motion.span key="bot"
+                initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}
+                transition={{ duration: 0.18 }}
+              >
+                <Bot className="w-7 h-7" />
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </span>
+      </button>
 
       {/* Chat Window */}
       <AnimatePresence>
