@@ -5,9 +5,10 @@ import { useEffect } from 'react';
 
 const MainLayout = ({ children }) => {
   const location = useLocation();
-  const isChatRoute = location.pathname.includes('/chat');
+  const isChatRoute = location.pathname === '/chat' || location.pathname === '/community-chat';
 
   useEffect(() => {
+    console.log('[MainLayout] path:', location.pathname, 'isChatRoute:', isChatRoute);
     if (isChatRoute) {
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
@@ -19,7 +20,7 @@ const MainLayout = ({ children }) => {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
     };
-  }, [isChatRoute]);
+  }, [isChatRoute, location.pathname]);
 
   return (
     <div className={`flex flex-col relative bg-[var(--color-bg)] transition-colors duration-300 ${isChatRoute ? 'h-screen overflow-hidden' : 'min-h-screen overflow-x-hidden'}`}>

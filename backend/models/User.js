@@ -2,6 +2,20 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const bcrypt = require('bcryptjs');
 
+const parseJsonField = (value, fallback) => {
+  if (value === null || value === undefined) return fallback;
+  if (Array.isArray(value) || (typeof value === 'object' && !Array.isArray(fallback))) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed ?? fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+};
+
 const User = sequelize.define('User', {
   id: {
     type: DataTypes.INTEGER,
@@ -18,7 +32,7 @@ const User = sequelize.define('User', {
     allowNull: false
   },
   avatar: {
-    type: DataTypes.STRING,
+    type: DataTypes.TEXT,
     defaultValue: 'default_cyber_avatar.png'
   },
   level: {
@@ -39,19 +53,31 @@ const User = sequelize.define('User', {
   },
   wordsLearned: {
     type: DataTypes.JSON,
-    defaultValue: []
+    defaultValue: [],
+    get() {
+      return parseJsonField(this.getDataValue('wordsLearned'), []);
+    }
   },
   favoriteWords: {
     type: DataTypes.JSON,
-    defaultValue: []
+    defaultValue: [],
+    get() {
+      return parseJsonField(this.getDataValue('favoriteWords'), []);
+    }
   },
   achievements: {
     type: DataTypes.JSON,
-    defaultValue: []
+    defaultValue: [],
+    get() {
+      return parseJsonField(this.getDataValue('achievements'), []);
+    }
   },
   stats: {
     type: DataTypes.JSON,
-    defaultValue: { totalQuizzesTaken: 0, highestScore: 0 }
+    defaultValue: { totalQuizzesTaken: 0, highestScore: 0 },
+    get() {
+      return parseJsonField(this.getDataValue('stats'), { totalQuizzesTaken: 0, highestScore: 0 });
+    }
   }
 }, {
   hooks: {

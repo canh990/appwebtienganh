@@ -35,7 +35,11 @@ module.exports = (io) => {
               }
             }
 
-            const fullPrompt = message + historyContext;
+            let fullPrompt = message;
+            if (!message.includes('Bạn là')) {
+              fullPrompt = `Bạn là CyberLingo AI, một trợ lý học tiếng Anh thân thiện. Hãy phản hồi bằng Tiếng Việt với giọng điệu vui vẻ, hiện đại và ngắn gọn. Trả lời câu hỏi sau của người dùng: "${message}"`;
+            }
+            fullPrompt += historyContext;
             reply = await generateWithFallback(fullPrompt, apiKey);
           } catch (aiErr) {
             console.error('[Socket] Lỗi gọi Gemini (tất cả models đều thất bại):', aiErr.message);

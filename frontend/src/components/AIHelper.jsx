@@ -96,7 +96,7 @@ const AIHelper = () => {
     if (!input.trim()) return;
     const userMsg = { role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
-    socket.emit('chat_message', { userId: user?.id || 'guest', message: input.trim() });
+    socket.emit('user_message', { userId: user?.id || 'guest', message: input.trim() });
     setInput('');
   };
 

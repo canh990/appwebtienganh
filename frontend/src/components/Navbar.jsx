@@ -91,10 +91,14 @@ const Navbar = () => {
                 to="/profile" 
                 className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-[var(--color-bg)] transition-all duration-200 group"
               >
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] flex items-center justify-center shadow-sm">
-                  <span className="text-white font-extrabold text-sm">
-                    {user.username.charAt(0).toUpperCase()}
-                  </span>
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] flex items-center justify-center shadow-sm overflow-hidden border border-[var(--color-surface-border)]">
+                  {user.avatar && user.avatar !== 'default_cyber_avatar.png' ? (
+                    <img src={user.avatar} className="w-full h-full object-cover" alt="avatar" />
+                  ) : (
+                    <span className="text-white font-extrabold text-sm">
+                      {user.username.charAt(0).toUpperCase()}
+                    </span>
+                  )}
                 </div>
                 <span className="text-sm font-bold hidden lg:block group-hover:text-[var(--color-primary)] transition-colors">
                   {user.username}

@@ -232,9 +232,13 @@ const CommunityChat = () => {
                   {/* Avatar (Other) */}
                   {!isMe && (
                     <div className={`shrink-0 w-10 h-10 rounded-2xl border-2 flex items-center justify-center overflow-hidden shadow-sm select-none ${getAvatarGradient(msg.user.level)}`}>
-                      <span className="font-black text-sm uppercase">
-                        {msg.user.username.charAt(0).toUpperCase()}
-                      </span>
+                      {msg.user.avatar && msg.user.avatar !== 'default_cyber_avatar.png' ? (
+                        <img src={msg.user.avatar} className="w-full h-full object-cover" alt="avatar" />
+                      ) : (
+                        <span className="font-black text-sm uppercase">
+                          {msg.user.username.charAt(0).toUpperCase()}
+                        </span>
+                      )}
                     </div>
                   )}
 
@@ -277,9 +281,13 @@ const CommunityChat = () => {
                   {/* Avatar (Me) */}
                   {isMe && (
                     <div className={`shrink-0 w-10 h-10 rounded-2xl border-2 flex items-center justify-center overflow-hidden shadow-sm select-none ${getAvatarGradient(user.level)}`}>
-                      <span className="font-black text-sm uppercase">
-                        {user.username.charAt(0).toUpperCase()}
-                      </span>
+                      {user.avatar && user.avatar !== 'default_cyber_avatar.png' ? (
+                        <img src={user.avatar} className="w-full h-full object-cover" alt="avatar" />
+                      ) : (
+                        <span className="font-black text-sm uppercase">
+                          {user.username.charAt(0).toUpperCase()}
+                        </span>
+                      )}
                     </div>
                   )}
                 </motion.div>
@@ -318,9 +326,10 @@ const CommunityChat = () => {
               <button
                 onClick={() => handleSend()}
                 disabled={!input.trim() || !isConnected}
-                className={`shrink-0 p-3.5 h-[52px] w-[52px] flex justify-center items-center rounded-2xl ${
+                className={`shrink-0 h-[52px] w-[52px] flex justify-center items-center rounded-2xl ${
                   input.trim() && isConnected ? 'btn-3d-primary' : 'btn-3d-secondary opacity-60'
                 }`}
+                style={{ padding: 0 }}
               >
                 <Send className="w-5 h-5" />
               </button>
@@ -339,8 +348,12 @@ const CommunityChat = () => {
           <div className="flex-grow overflow-y-auto p-3 space-y-2">
             {/* Me */}
             <div className="flex items-center gap-3 p-2 rounded-xl bg-sky-50 dark:bg-sky-950/20 border border-[var(--color-primary)]/20">
-              <div className={`w-8 h-8 rounded-xl border flex items-center justify-center text-xs font-black shrink-0 ${getAvatarGradient(user.level)}`}>
-                {user.username.charAt(0).toUpperCase()}
+              <div className={`w-8 h-8 rounded-xl border flex items-center justify-center text-xs font-black shrink-0 overflow-hidden ${getAvatarGradient(user.level)}`}>
+                {user.avatar && user.avatar !== 'default_cyber_avatar.png' ? (
+                  <img src={user.avatar} className="w-full h-full object-cover" alt="avatar" />
+                ) : (
+                  user.username.charAt(0).toUpperCase()
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-extrabold text-xs text-[var(--color-primary)] truncate flex items-center gap-1">

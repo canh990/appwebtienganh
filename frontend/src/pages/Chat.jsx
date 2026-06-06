@@ -119,6 +119,7 @@ const MarkdownMessage = ({ content }) => (
 
 /* ── Message bubble ──────────────────────────────────────────────────────── */
 const MessageBubble = ({ msg, onSpeak, activeMode }) => {
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const cfg = MODES.find((m) => m.id === activeMode) || MODES[0];
 
@@ -195,7 +196,13 @@ const MessageBubble = ({ msg, onSpeak, activeMode }) => {
       {/* User avatar */}
       {isUser && (
         <div className="shrink-0 w-10 h-10 rounded-2xl border-2 border-[var(--color-primary)] bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center overflow-hidden shadow-sm select-none">
-          <span className="font-black text-[var(--color-primary)] text-sm">U</span>
+          {user && user.avatar && user.avatar !== 'default_cyber_avatar.png' ? (
+            <img src={user.avatar} className="w-full h-full object-cover" alt="avatar" />
+          ) : (
+            <span className="font-black text-[var(--color-primary)] text-sm">
+              {user ? user.username.charAt(0).toUpperCase() : 'U'}
+            </span>
+          )}
         </div>
       )}
     </motion.div>
@@ -536,9 +543,10 @@ const Chat = () => {
             <button
               onClick={toggleListen}
               title={isListening ? 'Dừng phát âm' : 'Nhập bằng giọng nói'}
-              className={`shrink-0 p-3.5 h-[52px] w-[52px] flex justify-center items-center rounded-2xl ${
+              className={`shrink-0 h-[52px] w-[52px] flex justify-center items-center rounded-2xl ${
                 isListening ? 'btn-3d-danger animate-pulse' : 'btn-3d-secondary'
               }`}
+              style={{ padding: 0 }}
             >
               {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </button>
@@ -570,9 +578,10 @@ const Chat = () => {
             <button
               onClick={() => handleSend()}
               disabled={!input.trim() || isTyping}
-              className={`shrink-0 p-3.5 h-[52px] w-[52px] flex justify-center items-center rounded-2xl ${
+              className={`shrink-0 h-[52px] w-[52px] flex justify-center items-center rounded-2xl ${
                 input.trim() && !isTyping ? 'btn-3d-primary' : 'btn-3d-secondary opacity-60'
               }`}
+              style={{ padding: 0 }}
             >
               {isTyping ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
             </button>

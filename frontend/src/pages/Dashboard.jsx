@@ -80,8 +80,12 @@ const LeaderboardRow = ({ user: u, rank, currentId }) => {
       </div>
 
       {/* User avatar */}
-      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center font-bold text-sky-800 dark:text-sky-200 text-base shadow-sm">
-        {(u.username || 'U')[0].toUpperCase()}
+      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center font-bold text-sky-800 dark:text-sky-200 text-base shadow-sm overflow-hidden">
+        {u.avatar && u.avatar !== 'default_cyber_avatar.png' ? (
+          <img src={u.avatar} className="w-full h-full object-cover" alt="avatar" />
+        ) : (
+          (u.username || 'U')[0].toUpperCase()
+        )}
       </div>
 
       <div className="flex-1 min-w-0">
@@ -241,11 +245,15 @@ const Dashboard = () => {
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-8 text-center md:text-left">
           {/* Avatar container */}
           <div className="relative shrink-0 select-none">
-            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[var(--color-primary)] to-sky-300 flex items-center justify-center p-1 shadow-lg border-2 border-[var(--color-surface-border)]">
-              <div className="w-full h-full bg-[var(--color-surface)] rounded-2xl flex items-center justify-center">
-                <span className="text-4xl font-black text-[var(--color-primary)]">
-                  {(authUser.username || 'U')[0].toUpperCase()}
-                </span>
+            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[var(--color-primary)] to-sky-300 flex items-center justify-center p-1 shadow-lg border-2 border-[var(--color-surface-border)] overflow-hidden">
+              <div className="w-full h-full bg-[var(--color-surface)] rounded-2xl flex items-center justify-center overflow-hidden">
+                {authUser.avatar && authUser.avatar !== 'default_cyber_avatar.png' ? (
+                  <img src={authUser.avatar} className="w-full h-full object-cover" alt="avatar" />
+                ) : (
+                  <span className="text-4xl font-black text-[var(--color-primary)]">
+                    {(authUser.username || 'U')[0].toUpperCase()}
+                  </span>
+                )}
               </div>
             </div>
             <div className="absolute -bottom-2 -right-2 bg-orange-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md border-2 border-[var(--color-surface)] uppercase tracking-wider">

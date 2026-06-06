@@ -26,7 +26,7 @@ exports.registerUser = async (req, res) => {
     res.status(201).json({ 
       token: accessToken,
       refreshToken,
-      user: { id: user.id, username, level: user.level, streak: user.streak, xp: user.xp } 
+      user: { id: user.id, username, level: user.level, streak: user.streak, xp: user.xp, avatar: user.avatar } 
     });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi server', error: error.message });
@@ -49,7 +49,7 @@ exports.loginUser = async (req, res) => {
       res.json({ 
         token: accessToken,
         refreshToken,
-        user: { id: user.id, username, level: user.level, streak: user.streak, xp: user.xp } 
+        user: { id: user.id, username, level: user.level, streak: user.streak, xp: user.xp, avatar: user.avatar } 
       });
     } else {
       res.status(401).json({ message: 'Sai tên đăng nhập hoặc mật khẩu' });
@@ -85,7 +85,34 @@ exports.getUserProfile = async (req, res) => {
         username: user.username,
         level: user.level,
         streak: user.streak,
-        xp: user.xp || 0
+        xp: user.xp || 0,
+        avatar: user.avatar
+      });
+    } else {
+      res.status(404).json({ message: 'Không tìm thấy người dùng' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};
+
+// @desc    Update user profile (avatar)
+// @route   PUT /api/auth/profile
+exports.updateUserProfile = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (user) {
+      if (req.body.avatar !== undefined) {
+        user.avatar = req.body.avatar;
+      }
+      await user.save();
+      res.json({
+        id: user.id,
+        username: user.username,
+        level: user.level,
+        streak: user.streak,
+        xp: user.xp || 0,
+        avatar: user.avatar
       });
     } else {
       res.status(404).json({ message: 'Không tìm thấy người dùng' });
