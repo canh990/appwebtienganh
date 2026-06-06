@@ -4,15 +4,36 @@ const Quiz = require('../models/Quiz');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const sequelize = require('../config/database');
+const { Op } = require('sequelize');
 
-// Get random quizzes with optional filters: ?limit=10&type=multiple_choice
+// Get available quiz themes
+router.get('/themes', async (req, res) => {
+  try {
+    const results = await Quiz.findAll({
+      attributes: [
+        'theme',
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+      ],
+      where: { theme: { [Op.not]: null } },
+      group: ['theme'],
+      order: [[sequelize.fn('COUNT', sequelize.col('id')), 'DESC']]
+    });
+    res.json(results.map(r => ({ theme: r.theme, count: parseInt(r.dataValues.count) })));
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi lấy danh sách chủ đề', error: error.message });
+  }
+});
+
+// Get random quizzes with optional filters: ?limit=10&type=multiple_choice&theme=Tech
 router.get('/random', async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 10, 30);
     const type = req.query.type;
+    const theme = req.query.theme;
 
     const where = {};
     if (type && type !== 'all') where.type = type;
+    if (theme && theme !== 'all') where.theme = theme;
 
     const quizzes = await Quiz.findAll({
       where,

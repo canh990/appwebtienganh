@@ -50,163 +50,193 @@ router.post('/', async (req, res) => {
         question: "Từ nào mang ý nghĩa 'Thuộc về điều khiển học'?",
         options: ["Cybernetic", "Sentient", "Biometrics", "Cognitive"],
         answerIndex: 0,
-        type: 'multiple_choice'
+        type: 'multiple_choice',
+        theme: 'Sci-Fi'
       },
       {
         question: "Chọn từ tiếng Anh phù hợp cho nghĩa 'Sự tăng cường, cấy ghép':",
         options: ["Assimilation", "Augmentation", "Accumulation", "Amputation"],
         answerIndex: 1,
-        type: 'multiple_choice'
+        type: 'multiple_choice',
+        theme: 'Tech'
       },
       {
         question: "Từ 'Sentient' có nghĩa là gì?",
         options: ["Có tri giác, có cảm giác", "Vô tri, không cảm xúc", "Thông minh nhân tạo", "Mất kết nối mạng"],
         answerIndex: 0,
-        type: 'multiple_choice'
+        type: 'multiple_choice',
+        theme: 'AI'
       },
       {
         question: "Lựa chọn từ viết đúng nghĩa của 'Sự mã hóa':",
         options: ["Decryption", "Encoding", "Encryption", "Compression"],
         answerIndex: 2,
-        type: 'multiple_choice'
+        type: 'multiple_choice',
+        theme: 'Security'
       },
       {
         question: "Hệ thống chạy trên blockchain không phụ thuộc vào một máy chủ trung tâm gọi là hệ thống gì?",
         options: ["Centralized", "Decentralized", "Distributed", "Synchronized"],
         answerIndex: 1,
-        type: 'multiple_choice'
+        type: 'multiple_choice',
+        theme: 'Network'
       },
       {
         question: "Các công nghệ nhận diện như quét mống mắt, vân tay được gọi chung là gì?",
         options: ["Biometrics", "Cybernetics", "Nanotechnology", "Neural Link"],
         answerIndex: 0,
-        type: 'multiple_choice'
+        type: 'multiple_choice',
+        theme: 'Security'
       },
       {
         question: "Từ nào mang nghĩa 'Ảnh ba chiều'?",
         options: ["Hologram", "Photograph", "Blueprint", "Simulation"],
         answerIndex: 0,
-        type: 'multiple_choice'
+        type: 'multiple_choice',
+        theme: 'Sci-Fi'
       },
       {
         question: "Từ 'Glitch' mô tả điều gì?",
         options: ["Lỗi nghiêm trọng sập hệ thống", "Lỗi kỹ thuật nhỏ, sự cố đột ngột", "Bản cập nhật phần mềm mới", "Giao thức truyền dữ liệu"],
         answerIndex: 1,
-        type: 'multiple_choice'
+        type: 'multiple_choice',
+        theme: 'Tech'
       },
       {
         question: "Rô-bốt được thiết kế với hình dáng giống hệt con người được gọi là gì?",
         options: ["Cyborg", "Android", "Drone", "Mech"],
         answerIndex: 1,
-        type: 'multiple_choice'
+        type: 'multiple_choice',
+        theme: 'Sci-Fi'
       },
       {
         question: "Từ nào trái nghĩa với từ 'Encrypt' (Mã hóa)?",
         options: ["Decrypt", "Delete", "Debug", "Design"],
         answerIndex: 0,
-        type: 'multiple_choice'
+        type: 'multiple_choice',
+        theme: 'Security'
       },
       {
         question: "Từ nào mang ý nghĩa 'Phần mềm độc hại'?",
         options: ["Firmware", "Malware", "Hardware", "Shareware"],
         answerIndex: 1,
-        type: 'multiple_choice'
+        type: 'multiple_choice',
+        theme: 'Security'
       },
       {
         question: "Từ 'Cognitive' liên quan đến khía cạnh nào sau đây?",
         options: ["Thể chất", "Cơ học", "Mạng máy tính", "Nhận thức, trí tuệ"],
         answerIndex: 3,
-        type: 'multiple_choice'
+        type: 'multiple_choice',
+        theme: 'Tech'
       },
       {
         question: "Initiate the handshake ____ to start secure data communication.",
         correctAnswer: "protocol",
-        type: 'fill_in_blank'
+        type: 'fill_in_blank',
+        theme: 'Network'
       },
       {
         question: "Data stored in volatile RAM is ____ and disappears when the power cuts off.",
         correctAnswer: "ephemeral",
-        type: 'fill_in_blank'
+        type: 'fill_in_blank',
+        theme: 'Data'
       },
       {
         question: "The rogue hacker successfully bypassed security and accessed the corporate central ____.",
         correctAnswer: "mainframe",
-        type: 'fill_in_blank'
+        type: 'fill_in_blank',
+        theme: 'Tech'
       },
       {
         question: "A robust network ____ is essential to block unauthorized intrusion from outside.",
         correctAnswer: "firewall",
-        type: 'fill_in_blank'
+        type: 'fill_in_blank',
+        theme: 'Security'
       },
       {
         question: "The agent plugged the cable directly into his ____ interface port.",
         correctAnswer: "neural",
-        type: 'fill_in_blank'
+        type: 'fill_in_blank',
+        theme: 'Tech'
       },
       {
         question: "Next-gen ____ computers can break modern cryptography in seconds.",
         correctAnswer: "quantum",
-        type: 'fill_in_blank'
+        type: 'fill_in_blank',
+        theme: 'Sci-Fi'
       },
       {
         question: "Open the system command ____ and enter the override code.",
         correctAnswer: "terminal",
-        type: 'fill_in_blank'
+        type: 'fill_in_blank',
+        theme: 'Tech'
       },
       {
         question: "The central corporate ____ contains records of all synthetic citizens.",
         correctAnswer: "database",
-        type: 'fill_in_blank'
+        type: 'fill_in_blank',
+        theme: 'Data'
       },
       {
         question: "Lắng nghe âm thanh và viết lại từ bạn nghe được:",
         correctAnswer: "augmentation",
-        type: 'listening'
+        type: 'listening',
+        theme: 'Tech'
       },
       {
         question: "Lắng nghe âm thanh và viết lại từ bạn nghe được:",
         correctAnswer: "cybernetic",
-        type: 'listening'
+        type: 'listening',
+        theme: 'Sci-Fi'
       },
       {
         question: "Lắng nghe âm thanh và viết lại từ bạn nghe được:",
         correctAnswer: "sentient",
-        type: 'listening'
+        type: 'listening',
+        theme: 'AI'
       },
       {
         question: "Lắng nghe âm thanh và viết lại từ bạn nghe được:",
         correctAnswer: "volatile",
-        type: 'listening'
+        type: 'listening',
+        theme: 'Data'
       },
       {
         question: "Lắng nghe âm thanh và viết lại từ bạn nghe được:",
         correctAnswer: "nanotechnology",
-        type: 'listening'
+        type: 'listening',
+        theme: 'Sci-Fi'
       },
       {
         question: "Lắng nghe âm thanh và viết lại từ bạn nghe được:",
         correctAnswer: "synapse",
-        type: 'listening'
+        type: 'listening',
+        theme: 'Tech'
       },
       {
         question: "Lắng nghe âm thanh và viết lại từ bạn nghe được:",
         correctAnswer: "bandwidth",
-        type: 'listening'
+        type: 'listening',
+        theme: 'Network'
       },
       {
         question: "Lắng nghe âm thanh và viết lại từ bạn nghe được:",
         correctAnswer: "algorithm",
-        type: 'listening'
+        type: 'listening',
+        theme: 'Data'
       },
       {
         question: "Lắng nghe âm thanh và viết lại từ bạn nghe được:",
         correctAnswer: "infrastructure",
-        type: 'listening'
+        type: 'listening',
+        theme: 'Network'
       },
       {
         question: "Lắng nghe âm thanh và viết lại từ bạn nghe được:",
         correctAnswer: "synthesize",
-        type: 'listening'
+        type: 'listening',
+        theme: 'AI'
       }
     ];
     
@@ -290,7 +320,8 @@ Return ONLY the JSON object. No markdown, no triple backticks.`;
 
     let quizzesAdded = 0;
     if (data.quizzes && data.quizzes.length > 0) {
-      const insertedQuizzes = await Quiz.bulkCreate(data.quizzes);
+      const quizzesWithTheme = data.quizzes.map(q => ({ ...q, theme: q.theme || targetTheme }));
+      const insertedQuizzes = await Quiz.bulkCreate(quizzesWithTheme);
       quizzesAdded = insertedQuizzes.length;
     }
 

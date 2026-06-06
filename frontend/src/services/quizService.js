@@ -1,10 +1,16 @@
 import api from './api';
 
-export const getRandomQuiz = async ({ limit = 10, type = 'all' } = {}) => {
+export const getRandomQuiz = async ({ limit = 10, type = 'all', theme = '' } = {}) => {
   const params = new URLSearchParams({ limit });
   if (type && type !== 'all') params.append('type', type);
+  if (theme && theme !== 'all') params.append('theme', theme);
   const response = await api.get(`/quiz/random?${params}`);
   return response.data;
+};
+
+export const getQuizThemes = async () => {
+  const response = await api.get('/quiz/themes');
+  return response.data; // [{ theme, count }, ...]
 };
 
 export const submitQuiz = async (score, total, streak = 0) => {

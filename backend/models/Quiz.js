@@ -31,6 +31,11 @@ const Quiz = sequelize.define('Quiz', {
   xpReward: {
     type: DataTypes.INTEGER,
     defaultValue: 20
+  },
+  theme: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: null
   }
 });
 

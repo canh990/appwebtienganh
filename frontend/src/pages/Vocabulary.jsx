@@ -11,6 +11,7 @@ import { seedDatabase, generateAIWords } from '../services/seedService';
 import { submitQuiz } from '../services/quizService';
 import { getMyStats } from '../services/statsService';
 import { pageVariants } from '../animations/variants';
+import { SkeletonVocabularyGrid } from '../components/SkeletonCard';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { useSearchParams } from 'react-router-dom';
@@ -56,10 +57,10 @@ const speak = (text, rate = 0.85) => {
   window.speechSynthesis.speak(u);
 };
 
-/* ── Theme config ─────────────────────────────────────────────────────── */
 const THEME_CONFIG = {
   AI: { color: '#a855f7', bg: '#a855f715', emoji: '🤖', level: 'Advanced' },
   Cyber: { color: '#0ea5e9', bg: '#0ea5e915', emoji: '🌐', level: 'Advanced' },
+  Cyberpunk: { color: '#0ea5e9', bg: '#0ea5e915', emoji: '🌐', level: 'Advanced' },
   Tech: { color: '#3b82f6', bg: '#3b82f615', emoji: '⚙️', level: 'Beginner' },
   Security: { color: '#ef4444', bg: '#ef444415', emoji: '🛡️', level: 'Intermediate' },
   Network: { color: '#22c55e', bg: '#22c55e15', emoji: '📡', level: 'Intermediate' },
@@ -67,11 +68,41 @@ const THEME_CONFIG = {
   Data: { color: '#06b6d4', bg: '#06b6d415', emoji: '💾', level: 'Intermediate' },
   Hack: { color: '#f97316', bg: '#f9731615', emoji: '💻', level: 'Advanced' },
   General: { color: '#8b5cf6', bg: '#8b5cf615', emoji: '📚', level: 'Beginner' },
+  'Space Travel': { color: '#6366f1', bg: '#6366f115', emoji: '🌌', level: 'Intermediate' },
+  Animals: { color: '#10b981', bg: '#10b98115', emoji: '🦁', level: 'Beginner' },
+  Cooking: { color: '#f59e0b', bg: '#f59e0b15', emoji: '🍳', level: 'Beginner' },
+  'Job Interview': { color: '#6366f1', bg: '#6366f115', emoji: '💼', level: 'Advanced' },
+  Business: { color: '#3b82f6', bg: '#3b82f615', emoji: '📈', level: 'Intermediate' },
+  Travel: { color: '#06b6d4', bg: '#06b6d415', emoji: '✈️', level: 'Beginner' },
+  Music: { color: '#ec4899', bg: '#ec489915', emoji: '🎵', level: 'Beginner' },
+  Sports: { color: '#22c55e', bg: '#22c55e15', emoji: '⚽', level: 'Beginner' },
+  'Modern Tech': { color: '#3b82f6', bg: '#3b82f615', emoji: '⚙️', level: 'Intermediate' }
 };
 
 const getThemeConfig = (t) => {
+  if (!t) return { color: '#6b7280', bg: '#6b728015', emoji: '📝', level: 'Beginner' };
   if (t === '__favorites__') return { color: '#ef4444', bg: '#ef444415', emoji: '❤️', level: 'Special' };
-  return THEME_CONFIG[t] || { color: '#6b7280', bg: '#6b728015', emoji: '📝', level: 'Beginner' };
+  
+  const matchedKey = Object.keys(THEME_CONFIG).find(k => k.toLowerCase() === t.trim().toLowerCase());
+  if (matchedKey) return THEME_CONFIG[matchedKey];
+  
+  const tLower = t.toLowerCase();
+  if (tLower.includes('cyber')) return THEME_CONFIG['Cyberpunk'];
+  if (tLower.includes('sci')) return THEME_CONFIG['Sci-Fi'];
+  if (tLower.includes('space') || tLower.includes('universe')) return THEME_CONFIG['Space Travel'];
+  if (tLower.includes('animal') || tLower.includes('pet')) return THEME_CONFIG['Animals'];
+  if (tLower.includes('cook') || tLower.includes('food')) return THEME_CONFIG['Cooking'];
+  if (tLower.includes('interview') || tLower.includes('job') || tLower.includes('work')) return THEME_CONFIG['Job Interview'];
+  if (tLower.includes('business') || tLower.includes('money')) return THEME_CONFIG['Business'];
+  if (tLower.includes('travel') || tLower.includes('trip')) return THEME_CONFIG['Travel'];
+  if (tLower.includes('music') || tLower.includes('song')) return THEME_CONFIG['Music'];
+  if (tLower.includes('sport') || tLower.includes('play')) return THEME_CONFIG['Sports'];
+  if (tLower.includes('security') || tLower.includes('hack')) return THEME_CONFIG['Security'];
+  if (tLower.includes('net')) return THEME_CONFIG['Network'];
+  if (tLower.includes('ai') || tLower.includes('intelligence') || tLower.includes('robot')) return THEME_CONFIG['AI'];
+  if (tLower.includes('tech')) return THEME_CONFIG['Tech'];
+
+  return { color: '#6b7280', bg: '#6b728015', emoji: '📝', level: 'Beginner' };
 };
 
 const getLevelBadgeStyle = (lvl) => {
@@ -1200,9 +1231,19 @@ const Vocabulary = () => {
   }
 
   if (tab === 'browse' && browseLoading && page === 1) return (
-    <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-      <Loader2 className="w-12 h-12 text-[var(--color-primary)] animate-spin" />
-      <span className="font-bold text-[var(--color-primary)] text-sm">Đang tải kho từ vựng...</span>
+    <div className="max-w-7xl mx-auto px-4 pt-8">
+      {/* Header skeleton */}
+      <div className="mb-6 p-5 bg-[var(--color-surface)] rounded-2xl border-2 border-[var(--color-surface-border)] flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="skeleton h-7 w-56 rounded-xl" />
+          <div className="skeleton h-4 w-36 rounded-lg" />
+        </div>
+        <div className="flex gap-2">
+          <div className="skeleton h-9 w-28 rounded-xl" />
+          <div className="skeleton h-9 w-28 rounded-xl" />
+        </div>
+      </div>
+      <SkeletonVocabularyGrid count={6} />
     </div>
   );
 
@@ -1957,35 +1998,59 @@ const Vocabulary = () => {
 
               {/* Preset list */}
               <div className="flex-1 overflow-y-auto space-y-4 pr-2 -mr-2 min-h-0 pb-2">
-                <div className="space-y-2.5">
-                  <span className="block text-[10px] font-black uppercase tracking-wider text-[var(--color-text-muted)]">Chủ đề gợi ý:</span>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div className="space-y-1.5">
+                  <span className="block text-[10px] font-black uppercase tracking-wider text-[var(--color-text-muted)]">Chủ đề:</span>
+                  <select
+                    value={customAITheme ? '' : selectedAITheme}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setSelectedAITheme(e.target.value);
+                        setCustomAITheme('');
+                      }
+                    }}
+                    className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-xl p-2.5 text-[var(--color-text)] focus:border-[var(--color-primary)] outline-none transition-all font-bold text-xs"
+                  >
+                    {customAITheme && <option value="">-- Chủ đề tự chọn/điền: {customAITheme} --</option>}
+                    {(themes.length > 0 ? themes.map(t => t.theme) : ['Cyberpunk', 'Sci-Fi', 'Tech', 'Security', 'Network', 'AI']).map((themeName) => {
+                      const cfg = getThemeConfig(themeName);
+                      return (
+                        <option key={themeName} value={themeName}>
+                          {cfg.emoji} {themeName}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                {/* Quick select suggestions */}
+                <div className="space-y-2">
+                  <span className="block text-[10px] font-black uppercase tracking-wider text-[var(--color-text-muted)]">Gợi ý chủ đề khác (Click để chọn):</span>
+                  <div className="flex flex-wrap gap-1.5">
                     {[
-                      { id: 'Cyberpunk', label: 'Cyberpunk 🌐', color: '#0ea5e9' },
-                      { id: 'Sci-Fi', label: 'Sci-Fi 🚀', color: '#f59e0b' },
-                      { id: 'Tech', label: 'Tech ⚙️', color: '#3b82f6' },
-                      { id: 'Security', label: 'Security 🛡️', color: '#ef4444' },
-                      { id: 'Network', label: 'Network 📡', color: '#22c55e' },
-                      { id: 'AI', label: 'AI 🤖', color: '#a855f7' }
-                    ].map((preset) => {
-                      const isSelected = selectedAITheme === preset.id && !customAITheme;
+                      { label: 'Space Travel 🌌', value: 'Space Travel' },
+                      { label: 'Animals 🦁', value: 'Animals' },
+                      { label: 'Cooking 🍳', value: 'Cooking' },
+                      { label: 'Job Interview 💼', value: 'Job Interview' },
+                      { label: 'Business 📈', value: 'Business' },
+                      { label: 'Travel ✈️', value: 'Travel' },
+                      { label: 'Music 🎵', value: 'Music' },
+                      { label: 'Sports ⚽', value: 'Sports' }
+                    ].map((item) => {
+                      const isSelected = customAITheme.toLowerCase() === item.value.toLowerCase();
                       return (
                         <button
-                          key={preset.id}
+                          key={item.value}
                           type="button"
                           onClick={() => {
-                            setSelectedAITheme(preset.id);
-                            setCustomAITheme('');
+                            setCustomAITheme(item.value);
                           }}
-                          className={`px-3 py-2.5 rounded-xl border-2 text-xs font-bold transition-all text-left flex flex-col justify-between cursor-pointer ${isSelected
-                              ? 'bg-sky-50 dark:bg-sky-950/40 text-[var(--color-primary)] border-[var(--color-primary)] shadow-sm'
+                          className={`px-2.5 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-sm'
                               : 'bg-[var(--color-bg)] border-[var(--color-surface-border)] text-[var(--color-text-muted)] hover:border-gray-300 dark:hover:border-slate-700'
-                            }`}
-                          style={{
-                            borderColor: isSelected ? preset.color : undefined,
-                          }}
+                          }`}
                         >
-                          <span className="truncate w-full">{preset.label}</span>
+                          {item.label}
                         </button>
                       );
                     })}

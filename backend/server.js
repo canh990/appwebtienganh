@@ -11,6 +11,9 @@ const chatRoutes = require('./routes/chat');
 const seedRoutes = require('./routes/seed');
 const statsRoutes = require('./routes/stats');
 
+// Auto-seed helper
+const autoSeedIfEmpty = require('./utils/autoSeed');
+
 dotenv.config();
 const app = express();
 
@@ -56,6 +59,9 @@ const connectDB = async () => {
     // Sync models
     await sequelize.sync({ alter: true });
     console.log('⚡ Tất cả các bảng cơ sở dữ liệu đã được đồng bộ hóa.');
+
+    // Tự động seed nếu bảng Quiz rỗng
+    await autoSeedIfEmpty();
   } catch (err) {
     console.error('❌ Lỗi kết nối cơ sở dữ liệu MySQL:', err);
     process.exit(1);
