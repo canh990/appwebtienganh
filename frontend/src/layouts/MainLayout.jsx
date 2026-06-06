@@ -1,19 +1,38 @@
 import Navbar from '../components/Navbar';
 import AIHelper from '../components/AIHelper';
+import { useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const MainLayout = ({ children }) => {
+  const location = useLocation();
+  const isChatRoute = location.pathname.includes('/chat');
+
+  useEffect(() => {
+    if (isChatRoute) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isChatRoute]);
+
   return (
-    <div className="min-h-screen flex flex-col relative overflow-x-hidden bg-[var(--color-bg)] transition-colors duration-300">
+    <div className={`flex flex-col relative bg-[var(--color-bg)] transition-colors duration-300 ${isChatRoute ? 'h-screen overflow-hidden' : 'min-h-screen overflow-x-hidden'}`}>
       {/* Subtle modern background gradient overlay */}
       <div className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-br from-[var(--color-primary)]/5 via-transparent to-[var(--color-secondary)]/5" />
       
       <Navbar />
       
-      <main className="flex-grow container mx-auto px-4 py-8 md:py-12 relative z-10 w-full max-w-7xl">
+      <main className={`flex-grow relative w-full flex flex-col overflow-hidden ${isChatRoute ? '' : 'container mx-auto px-4 py-8 md:py-12 max-w-7xl overflow-y-auto'}`}>
         {children}
       </main>
       
-      <AIHelper />
+      {!isChatRoute && <AIHelper />}
     </div>
   );
 };

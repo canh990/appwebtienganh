@@ -133,15 +133,12 @@ const AIHelper = () => {
       <motion.button
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
         onClick={toggleOpen}
-        className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] text-white shadow-lg hover:shadow-xl transition-all flex items-center gap-2 group"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center cursor-pointer"
       >
-        <Bot className="w-6 h-6 animate-pulse-slow" />
-        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-300 font-medium text-sm">
-          Hỏi AI Ngay
-        </span>
+        <Bot className="w-7 h-7" />
       </motion.button>
 
       {/* Chat Window */}

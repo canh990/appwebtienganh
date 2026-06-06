@@ -2,9 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bot, Send, Mic, MicOff, Trash2, Sparkles, BookOpen, Brain,
-  MessageSquare, ChevronRight, Zap, Volume2, Copy, Check,
-  RotateCcw, Loader2, Globe, PenLine, Headphones, GraduationCap,
-  X, Menu, ChevronDown
+  MessageSquare, Globe, PenLine, Volume2, Copy, Check,
+  Menu, Loader2
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
@@ -33,19 +32,19 @@ const MODES = [
     id: 'general',
     label: 'Trợ Lý AI',
     icon: <Bot className="w-4 h-4" />,
-    color: '#00f0ff',
+    color: '#1cb0f6',
     desc: 'Hỏi đáp tự do về tiếng Anh',
     prompt: (msg) =>
-      `Bạn là Nexus AI, một trợ lý học tiếng Anh đến từ tương lai Cyberpunk.\nNgười dùng nói: "${msg}".\nHãy phản hồi bằng Tiếng Việt với giọng điệu đậm chất viễn tưởng/cyberpunk (ngắn gọn, ngầu, hiện đại). Nếu câu nói có tiếng Anh hoặc hỏi về tiếng Anh, hãy giải thích và sửa lỗi bằng tiếng Việt.`,
+      `Bạn là Nexus AI, một trợ lý học tiếng Anh thân thiện.\nNgười dùng nói: "${msg}".\nHãy phản hồi bằng Tiếng Việt với giọng điệu vui vẻ, hiện đại và ngắn gọn. Nếu câu nói có tiếng Anh hoặc hỏi về tiếng Anh, hãy giải thích và sửa lỗi bằng tiếng Việt.`,
   },
   {
     id: 'grammar',
-    label: 'Kiểm Tra Ngữ Pháp',
+    label: 'Sửa Ngữ Pháp',
     icon: <PenLine className="w-4 h-4" />,
     color: '#a855f7',
-    desc: 'Sửa lỗi ngữ pháp câu tiếng Anh',
+    desc: 'Sửa lỗi câu tiếng Anh',
     prompt: (msg) =>
-      `Bạn là chuyên gia ngữ pháp tiếng Anh Cyberpunk. Người dùng muốn kiểm tra/sửa lỗi câu sau: "${msg}".\nHãy:\n1. Phân tích lỗi ngữ pháp nếu có (bằng tiếng Việt)\n2. Đưa ra câu đúng (in đậm)\n3. Giải thích ngắn gọn tại sao\nPhong cách trả lời: ngắn gọn, cyberpunk, dùng emoji phù hợp.`,
+      `Bạn là chuyên gia ngữ pháp tiếng Anh. Người dùng muốn sửa lỗi câu sau: "${msg}".\nHãy:\n1. Phân tích lỗi ngữ pháp nếu có (bằng tiếng Việt)\n2. Đưa ra câu đúng (in đậm)\n3. Giải thích ngắn gọn tại sao\nPhong cách trả lời: ngắn gọn, dùng emoji phù hợp.`,
   },
   {
     id: 'translate',
@@ -54,25 +53,25 @@ const MODES = [
     color: '#22c55e',
     desc: 'Dịch Anh ↔ Việt với giải thích',
     prompt: (msg) =>
-      `Bạn là dịch giả AI Cyberpunk chuyên Anh-Việt.\nNhận đầu vào: "${msg}"\nTự động phát hiện ngôn ngữ và dịch sang ngôn ngữ còn lại.\nNếu là tiếng Anh → dịch sang tiếng Việt + giải thích sắc thái nghĩa.\nNếu là tiếng Việt → dịch sang tiếng Anh + cho ví dụ dùng trong câu.\nPhong cách: rõ ràng, kỹ thuật, cyberpunk.`,
+      `Bạn là dịch giả tiếng Anh chuyên nghiệp.\nNhận đầu vào: "${msg}"\nTự động phát hiện ngôn ngữ và dịch sang ngôn ngữ còn lại.\nNếu là tiếng Anh → dịch sang tiếng Việt + giải thích nghĩa.\nNếu là tiếng Việt → dịch sang tiếng Anh + cho ví dụ.\nPhong cách: rõ ràng, dễ hiểu.`,
   },
   {
     id: 'vocabulary',
     label: 'Học Từ Vựng',
     icon: <BookOpen className="w-4 h-4" />,
     color: '#f59e0b',
-    desc: 'Phân tích sâu một từ tiếng Anh',
+    desc: 'Phân tích sâu một từ vựng',
     prompt: (msg) =>
-      `Bạn là AI từ điển Cyberpunk. Người dùng muốn học từ: "${msg}".\nCung cấp đầy đủ:\n1. Nghĩa tiếng Việt (chính + các nghĩa phụ)\n2. Phiên âm IPA\n3. Ví dụ câu (3 câu ngắn, chủ đề Cyberpunk/Tech)\n4. Từ đồng nghĩa & trái nghĩa\n5. Mẹo ghi nhớ (memory hack)\nFormat đẹp với emoji. Phong cách: chuyên gia, ngầu, futuristic.`,
+      `Bạn là AI từ điển tiếng Anh thông minh. Người dùng muốn học từ: "${msg}".\nCung cấp:\n1. Nghĩa tiếng Việt (chính + phụ)\n2. Phiên âm IPA\n3. Ví dụ câu (3 câu ngắn)\n4. Từ đồng nghĩa & trái nghĩa\n5. Mẹo ghi nhớ (memory hack)\nFormat đẹp với emoji.`,
   },
   {
     id: 'conversation',
-    label: 'Luyện Giao Tiếp',
+    label: 'Giao Tiếp',
     icon: <MessageSquare className="w-4 h-4" />,
     color: '#ef4444',
     desc: 'Hội thoại thực tế với AI',
     prompt: (msg) =>
-      `Bạn là người bản ngữ tiếng Anh Cyberpunk, đang hội thoại thực tế với người học.\nNgười dùng nói: "${msg}"\nHãy:\n1. Phản hồi tự nhiên bằng tiếng Anh (ngắn, 1-2 câu)\n2. Sau đó giải thích (tiếng Việt) những từ/cụm từ hay bạn vừa dùng\n3. Gợi ý cách người dùng có thể tiếp tục hội thoại\nPhong cách: thân thiện, tự nhiên, cyberpunk slang.`,
+      `Bạn là người bản ngữ tiếng Anh, đang hội thoại thực tế với người học.\nNgười dùng nói: "${msg}"\nHãy:\n1. Phản hồi tự nhiên bằng tiếng Anh (ngắn, 1-2 câu)\n2. Giải thích (tiếng Việt) từ/cụm từ hay bạn vừa dùng\n3. Gợi ý cách người dùng trả lời tiếp\nPhong cách: thân thiện.`,
   },
   {
     id: 'quiz',
@@ -81,54 +80,37 @@ const MODES = [
     color: '#f97316',
     desc: 'AI tạo câu hỏi kiểm tra ngẫu nhiên',
     prompt: (msg) =>
-      `Bạn là quiz master AI Cyberpunk về tiếng Anh.\nNgười dùng yêu cầu: "${msg}"\nTạo 3 câu hỏi trắc nghiệm thú vị về tiếng Anh (chủ đề công nghệ/cyberpunk):\n- Mỗi câu có 4 đáp án (A, B, C, D)\n- Đánh dấu đáp án đúng\n- Giải thích ngắn tại sao đúng\nFormat dễ đọc, có emoji, phong cách futuristic.`,
+      `Bạn là quiz master tiếng Anh.\nNgười dùng yêu cầu: "${msg}"\nTạo 3 câu hỏi trắc nghiệm thú vị về tiếng Anh:\n- Mỗi câu có 4 đáp án (A, B, C, D)\n- Đánh dấu đáp án đúng\n- Giải thích ngắn tại sao đúng\nFormat dễ đọc, có emoji.`,
   },
 ];
 
 /* ── Quick prompts ───────────────────────────────────────────────────────── */
 const QUICK_PROMPTS = [
-  { label: 'Giải thích "Hack the planet"', icon: '🌐' },
-  { label: 'Từ vựng về AI & Machine Learning', icon: '🤖' },
-  { label: 'Sửa lỗi: "I am go to school yesterday"', icon: '✏️' },
-  { label: 'Dịch: Trí tuệ nhân tạo', icon: '🔄' },
-  { label: 'Luyện hội thoại: Xin việc công nghệ', icon: '💬' },
-  { label: 'Tạo 3 câu hỏi về Cyberpunk vocab', icon: '⚡' },
+  { label: 'Giải thích "Break a leg"', icon: '🎭', color: '#1cb0f6' },
+  { label: 'Từ vựng về IT', icon: '💻', color: '#a855f7' },
+  { label: 'Sửa lỗi: "I am go to school"', icon: '✏️', color: '#ef4444' },
+  { label: 'Dịch: Học đi đôi với hành', icon: '🔄', color: '#22c55e' },
+  { label: 'Hội thoại: Phỏng vấn xin việc', icon: '💬', color: '#f59e0b' },
+  { label: 'Tạo 3 câu trắc nghiệm từ vựng', icon: '⚡', color: '#f97316' },
 ];
 
 /* ── Markdown renderer ───────────────────────────────────────────────────── */
 const MarkdownMessage = ({ content }) => (
   <ReactMarkdown
     components={{
-      p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
+      p: ({ children }) => <p className="mb-1 last:mb-0 leading-relaxed">{children}</p>,
       strong: ({ children }) => <strong className="text-[var(--color-primary)] font-bold">{children}</strong>,
-      em: ({ children }) => <em className="text-[var(--color-accent)] not-italic font-medium">{children}</em>,
-      ul: ({ children }) => <ul className="my-2 space-y-1 pl-3">{children}</ul>,
-      ol: ({ children }) => <ol className="my-2 space-y-1 pl-4 list-decimal">{children}</ol>,
-      li: ({ children }) => (
-        <li className="flex gap-2 items-start text-sm">
-          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[var(--color-primary)] shrink-0" />
-          <span>{children}</span>
-        </li>
-      ),
+      em: ({ children }) => <em className="text-[var(--color-accent)] not-italic font-bold">{children}</em>,
       code: ({ inline, children }) =>
         inline ? (
-          <code className="bg-black/60 border border-[var(--color-primary)]/40 text-[var(--color-primary)] px-1.5 py-0.5 rounded text-[11px] font-mono">
+          <code className="bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] text-[var(--color-primary)] px-1.5 py-0.5 rounded-lg text-[11px] font-mono font-bold">
             {children}
           </code>
         ) : (
-          <pre className="my-2 p-3 bg-black/70 border border-white/10 rounded-lg overflow-x-auto text-[11px] font-mono text-gray-300">
+          <pre className="my-2 p-3 bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-xl overflow-x-auto text-[11px] font-mono text-[var(--color-text)]">
             <code>{children}</code>
           </pre>
         ),
-      h1: ({ children }) => <h1 className="text-base font-black text-[var(--color-primary)] mb-2 uppercase tracking-wider">{children}</h1>,
-      h2: ({ children }) => <h2 className="text-sm font-bold text-[var(--color-accent)] mb-1.5 uppercase tracking-wide">{children}</h2>,
-      h3: ({ children }) => <h3 className="text-sm font-bold text-white mb-1">{children}</h3>,
-      blockquote: ({ children }) => (
-        <blockquote className="border-l-2 border-[var(--color-primary)] pl-3 my-2 text-gray-400 italic text-sm">
-          {children}
-        </blockquote>
-      ),
-      hr: () => <hr className="my-3 border-white/10" />,
     }}
   >
     {content}
@@ -146,72 +128,74 @@ const MessageBubble = ({ msg, onSpeak, activeMode }) => {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const isUser = msg.role === 'user';
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10, x: msg.role === 'user' ? 10 : -10 }}
-      animate={{ opacity: 1, y: 0, x: 0 }}
-      transition={{ duration: 0.25 }}
-      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2 group`}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+      className={`flex ${isUser ? 'justify-end' : 'justify-start'} items-end gap-3 group`}
     >
       {/* AI avatar */}
-      {msg.role === 'ai' && (
+      {!isUser && (
         <div
-          className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center mb-0.5 border"
-          style={{ background: cfg.color + '18', borderColor: cfg.color + '40' }}
+          className="shrink-0 w-10 h-10 rounded-2xl border-2 border-[var(--color-surface-border)] bg-[var(--color-surface)] flex items-center justify-center overflow-hidden shadow-sm select-none"
         >
           <div style={{ color: cfg.color }}>{cfg.icon}</div>
         </div>
       )}
 
-      <div className="flex flex-col gap-1 max-w-[78%]">
+      <div className={`flex flex-col gap-1 max-w-[75%] ${isUser ? 'items-end' : 'items-start'}`}>
         {/* Role label for AI */}
-        {msg.role === 'ai' && (
-          <span className="text-[10px] font-mono ml-1" style={{ color: cfg.color }}>
-            Nexus AI · {cfg.label}
-          </span>
-        )}
+        <div className={`flex items-center gap-2 text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider ${isUser ? 'flex-row-reverse' : ''} select-none`}>
+          {isUser ? (
+            <span className="font-extrabold text-[var(--color-primary)]">BẠN</span>
+          ) : (
+            <span className="font-extrabold" style={{ color: cfg.color }}>NEXUS AI · {cfg.label}</span>
+          )}
+          <span className="opacity-80">{msg.time}</span>
+          
+          {!isUser && (
+            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+              <button
+                onClick={() => onSpeak(msg.text)}
+                className="p-1 rounded-md text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-surface-border)] transition-all cursor-pointer"
+                title="Nghe phát âm"
+              >
+                <Volume2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={handleCopy}
+                className="p-1 rounded-md text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-surface-border)] transition-all cursor-pointer"
+                title="Sao chép"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-[#58cc02]" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Bubble */}
         <div
-          className={`rounded-2xl text-sm font-mono relative ${
-            msg.role === 'user'
-              ? 'bg-[var(--color-primary)] text-black px-4 py-3 rounded-br-sm font-medium shadow-[0_0_20px_rgba(0,240,255,0.2)]'
-              : 'bg-[#0a0a0a]/90 border border-white/8 text-gray-200 px-4 py-3 rounded-bl-sm'
+          className={`rounded-2xl text-sm px-4 py-3 relative border-2 ${
+            isUser
+              ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white rounded-br-none shadow-sm'
+              : 'bg-[var(--color-surface)] border-[var(--color-surface-border)] text-[var(--color-text)] rounded-bl-none'
           }`}
+          style={{
+            borderBottomWidth: isUser ? '4px' : undefined,
+            borderBottomColor: isUser ? 'var(--color-primary-hover)' : undefined
+          }}
         >
-          {msg.role === 'ai' ? <MarkdownMessage content={msg.text} /> : <span>{msg.text}</span>}
-
-          {/* Timestamp */}
-          <span className={`block text-[10px] mt-1.5 ${msg.role === 'user' ? 'text-black/50 text-right' : 'text-gray-600'}`}>
-            {msg.time}
-          </span>
+          {isUser ? <span className="font-medium text-[13px]">{msg.text}</span> : <MarkdownMessage content={msg.text} />}
         </div>
-
-        {/* Action buttons for AI messages */}
-        {msg.role === 'ai' && (
-          <div className="flex gap-1 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={() => onSpeak(msg.text)}
-              className="p-1.5 rounded-lg border border-white/10 text-gray-500 hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]/40 transition-all"
-              title="Nghe"
-            >
-              <Volume2 className="w-3 h-3" />
-            </button>
-            <button
-              onClick={handleCopy}
-              className="p-1.5 rounded-lg border border-white/10 text-gray-500 hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]/40 transition-all"
-              title="Sao chép"
-            >
-              {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
-            </button>
-          </div>
-        )}
       </div>
 
       {/* User avatar */}
-      {msg.role === 'user' && (
-        <div className="shrink-0 w-8 h-8 rounded-xl bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/40 flex items-center justify-center mb-0.5 text-[var(--color-primary)] text-xs font-black">
-          U
+      {isUser && (
+        <div className="shrink-0 w-10 h-10 rounded-2xl border-2 border-[var(--color-primary)] bg-sky-50 dark:bg-sky-950/40 flex items-center justify-center overflow-hidden shadow-sm select-none">
+          <span className="font-black text-[var(--color-primary)] text-sm">U</span>
         </div>
       )}
     </motion.div>
@@ -226,7 +210,8 @@ const Chat = () => {
   const [messages, setMessages] = useState([
     {
       role: 'ai',
-      text: '**Nexus AI v2.0 Online** 🤖\n\nĐường liên kết nơ-ron đã được thiết lập. Chào mừng chiến binh số!\n\nTôi là trợ lý học tiếng Anh AI của bạn. Chọn chế độ học phù hợp bên trái, hoặc bắt đầu gõ câu hỏi ngay bây giờ.\n\n> *"The net is vast and infinite."* — Ghost in the Shell',
+      isWelcome: true,
+      text: 'SYSTEM_WELCOME',
       time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
     }
   ]);
@@ -235,7 +220,6 @@ const Chat = () => {
   const [isListening, setIsListening] = useState(false);
   const [activeMode, setActiveMode] = useState('general');
   const [showSidebar, setShowSidebar] = useState(true);
-  const [showModeDropdown, setShowModeDropdown] = useState(false);
   const [sessionCount, setSessionCount] = useState(0);
 
   const messagesEndRef = useRef(null);
@@ -295,12 +279,13 @@ const Chat = () => {
     setMessages([
       {
         role: 'ai',
-        text: '**Bộ nhớ đệm đã được xóa sạch.** Phiên kết nối mới bắt đầu.\n\nReady to uplink! 🔄',
+        isWelcome: true,
+        text: 'SYSTEM_WELCOME',
         time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
       },
     ]);
     setSessionCount(0);
-    toast.success('Đã xóa lịch sử cuộc trò chuyện');
+    toast.success('Đã dọn dẹp cuộc trò chuyện');
   };
 
   /* Voice input */
@@ -327,7 +312,7 @@ const Chat = () => {
     };
     recognition.onerror = (e) => {
       setIsListening(false);
-      toast.error('Lỗi giọng nói: ' + e.error);
+      toast.error('Lỗi nhận diện: ' + e.error);
     };
     recognition.onend = () => setIsListening(false);
   };
@@ -338,10 +323,9 @@ const Chat = () => {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="flex h-[calc(100vh-120px)] max-w-7xl mx-auto gap-0 overflow-hidden rounded-2xl border border-white/8"
-      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(20px)' }}
+      className="flex flex-1 w-full flex-row overflow-hidden bg-[var(--color-surface)]"
     >
-      {/* ═══ SIDEBAR ════════════════════════════════════════════════════════ */}
+      {/* ═══ SIDEBAR ═══ */}
       <AnimatePresence>
         {showSidebar && (
           <motion.aside
@@ -349,87 +333,65 @@ const Chat = () => {
             animate={{ width: 280, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="shrink-0 border-r border-white/8 flex flex-col overflow-hidden"
-            style={{ background: 'rgba(0,0,0,0.7)' }}
+            className="shrink-0 border-r-2 border-[var(--color-surface-border)] flex flex-col overflow-hidden bg-[var(--color-bg)]/60"
           >
             {/* Sidebar header */}
-            <div className="p-4 border-b border-white/8">
+            <div className="p-4 border-b-2 border-[var(--color-surface-border)] bg-[var(--color-surface)] select-none">
               <div className="flex items-center gap-2 mb-1">
                 <Sparkles className="w-4 h-4 text-[var(--color-primary)] animate-pulse" />
-                <span className="font-mono font-black text-xs text-[var(--color-primary)] uppercase tracking-widest">
-                  Chế Độ Học
+                <span className="font-black text-xs text-[var(--color-text)] uppercase tracking-wider">
+                  Chế Độ AI Chat
                 </span>
               </div>
-              <p className="text-[10px] text-gray-600 font-mono">Chọn để tùy chỉnh AI response</p>
+              <p className="text-[9px] text-[var(--color-text-muted)] font-black uppercase tracking-wider">Tùy biến câu trả lời của AI</p>
             </div>
 
             {/* Mode list */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-1.5 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
               {MODES.map((mode) => {
                 const isActive = activeMode === mode.id;
                 return (
                   <motion.button
                     key={mode.id}
-                    whileHover={{ x: 3 }}
-                    whileTap={{ scale: 0.97 }}
+                    whileHover={{ x: 2 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => { setActiveMode(mode.id); inputRef.current?.focus(); }}
-                    className={`w-full text-left p-3 rounded-xl border transition-all duration-200 ${
-                      isActive ? 'border-opacity-60 font-bold' : 'border-white/5 hover:border-white/15 hover:bg-white/3'
+                    className={`w-full text-left p-3 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${
+                      isActive ? 'font-bold' : 'border-transparent hover:bg-[var(--color-surface-border)]/50'
                     }`}
                     style={isActive ? {
-                      background: mode.color + '15',
-                      borderColor: mode.color + '60',
-                      boxShadow: `0 0 15px ${mode.color}10`,
+                      background: mode.color + '12',
+                      borderColor: mode.color,
                     } : {}}
                   >
-                    <div className="flex items-center gap-2.5 mb-1">
+                    <div className="flex items-center gap-2.5 mb-1.5">
                       <div
-                        className="p-1.5 rounded-lg"
-                        style={{ background: mode.color + '20', color: mode.color }}
+                        className="p-1.5 rounded-xl text-white shadow-sm"
+                        style={{ backgroundColor: mode.color }}
                       >
                         {mode.icon}
                       </div>
-                      <span className="font-mono text-xs font-bold text-white">{mode.label}</span>
+                      <span className="text-[11px] font-black text-[var(--color-text)] uppercase tracking-wider">{mode.label}</span>
                       {isActive && (
                         <span className="ml-auto w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: mode.color }} />
                       )}
                     </div>
-                    <p className="text-[10px] text-gray-500 font-mono pl-8">{mode.desc}</p>
+                    <p className="text-[10px] text-[var(--color-text-muted)] font-bold pl-9">{mode.desc}</p>
                   </motion.button>
                 );
               })}
             </div>
 
-            {/* Quick prompts */}
-            <div className="p-3 border-t border-white/8">
-              <p className="text-[10px] font-mono text-gray-600 uppercase tracking-widest mb-2 px-1">
-                ⚡ Gợi ý nhanh
-              </p>
-              <div className="space-y-1">
-                {QUICK_PROMPTS.slice(0, 4).map((qp, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleSend(qp.label)}
-                    disabled={isTyping}
-                    className="w-full text-left p-2 rounded-lg text-[10px] font-mono text-gray-400 hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 border border-transparent hover:border-[var(--color-primary)]/20 transition-all flex items-center gap-2 disabled:opacity-40"
-                  >
-                    <span>{qp.icon}</span>
-                    <span className="truncate">{qp.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Session stats */}
-            <div className="p-3 border-t border-white/8">
+            {/* Session stats counter */}
+            <div className="p-3 border-t-2 border-[var(--color-surface-border)] bg-[var(--color-bg)]/20">
               <div className="grid grid-cols-2 gap-2">
-                <div className="bg-black/50 border border-white/5 rounded-lg p-2 text-center">
-                  <p className="text-[var(--color-primary)] font-black font-mono text-lg">{sessionCount}</p>
-                  <p className="text-[9px] text-gray-600 font-mono uppercase">Phản hồi</p>
+                <div className="bg-[var(--color-surface)] border-2 border-[var(--color-surface-border)] rounded-xl p-2 text-center shadow-sm">
+                  <p className="text-[var(--color-primary)] font-black text-lg">{sessionCount}</p>
+                  <p className="text-[9px] text-[var(--color-text-muted)] font-black uppercase tracking-wider">Phản hồi</p>
                 </div>
-                <div className="bg-black/50 border border-white/5 rounded-lg p-2 text-center">
-                  <p className="text-[var(--color-accent)] font-black font-mono text-lg">{messages.length - 1}</p>
-                  <p className="text-[9px] text-gray-600 font-mono uppercase">Tin nhắn</p>
+                <div className="bg-[var(--color-surface)] border-2 border-[var(--color-surface-border)] rounded-xl p-2 text-center shadow-sm">
+                  <p className="text-[var(--color-accent)] font-black text-lg">{Math.max(0, messages.length - 1)}</p>
+                  <p className="text-[9px] text-[var(--color-text-muted)] font-black uppercase tracking-wider">Tin nhắn</p>
                 </div>
               </div>
             </div>
@@ -437,133 +399,102 @@ const Chat = () => {
         )}
       </AnimatePresence>
 
-      {/* ═══ CHAT AREA ══════════════════════════════════════════════════════ */}
+      {/* ═══ CHAT AREA ═══ */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* ── Chat header ── */}
-        <div
-          className="shrink-0 px-4 py-3 border-b border-white/8 flex items-center gap-3"
-          style={{ background: 'rgba(0,0,0,0.5)' }}
-        >
-          {/* Sidebar toggle */}
-          <button
-            onClick={() => setShowSidebar((s) => !s)}
-            className="p-2 rounded-lg border border-white/10 text-gray-500 hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]/40 transition-all shrink-0"
-          >
-            <Menu className="w-4 h-4" />
-          </button>
-
-          {/* Bot status */}
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <div className="relative shrink-0">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center border"
-                style={{ background: currentMode.color + '18', borderColor: currentMode.color + '40' }}
+        <div className="shrink-0 px-6 py-4 border-b-2 border-[var(--color-surface-border)] flex items-center justify-between bg-[var(--color-surface)] select-none z-10">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowSidebar((s) => !s)}
+              className="p-2 rounded-xl border-2 border-[var(--color-surface-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text)] transition-all shrink-0 cursor-pointer"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+            <div className="relative">
+              <div 
+                className="w-12 h-12 rounded-2xl flex items-center justify-center border-2 border-[var(--color-surface-border)]"
+                style={{ background: currentMode.color + '15', color: currentMode.color }}
               >
-                <div style={{ color: currentMode.color }}>{currentMode.icon}</div>
+                {currentMode.icon}
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border border-black" />
+              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#58cc02] rounded-full border-2 border-[var(--color-surface)] animate-pulse" />
             </div>
-            <div className="min-w-0">
-              <h1 className="font-mono font-black text-sm text-[var(--color-primary)] uppercase tracking-widest">
-                Nexus AI
+            <div>
+              <h1 className="font-black text-base text-[var(--color-text)] uppercase tracking-wider flex items-center gap-2">
+                Nexus AI Trợ Lý
               </h1>
-              <p className="text-[10px] text-gray-500 font-mono flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
-                {currentMode.label} · {isTyping ? 'Đang xử lý...' : 'Sẵn sàng'}
+              <p className="text-xs text-[var(--color-text-muted)] font-bold flex items-center gap-1.5 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#58cc02]" />
+                {currentMode.label} · {isTyping ? 'Đang soạn...' : 'Đang hoạt động'}
               </p>
             </div>
           </div>
-
-          {/* Mode quick-switch (mobile) */}
-          <div className="relative hidden sm:block">
-            <button
-              onClick={() => setShowModeDropdown((s) => !s)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-mono font-bold transition-all"
-              style={{
-                background: currentMode.color + '15',
-                borderColor: currentMode.color + '40',
-                color: currentMode.color,
-              }}
-            >
-              {currentMode.icon}
-              <span className="hidden md:inline">{currentMode.label}</span>
-              <ChevronDown className="w-3 h-3" />
-            </button>
-            <AnimatePresence>
-              {showModeDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                  className="absolute right-0 top-10 w-52 bg-[#0a0a0a] border border-white/10 rounded-xl shadow-2xl z-50 p-1 overflow-hidden"
-                >
-                  {MODES.map((mode) => (
-                    <button
-                      key={mode.id}
-                      onClick={() => { setActiveMode(mode.id); setShowModeDropdown(false); inputRef.current?.focus(); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-mono hover:bg-white/5 transition-colors text-left"
-                      style={{ color: activeMode === mode.id ? mode.color : '#9ca3af' }}
-                    >
-                      <span style={{ color: mode.color }}>{mode.icon}</span>
-                      {mode.label}
-                      {activeMode === mode.id && <Check className="w-3 h-3 ml-auto" />}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Clear */}
+          
           <button
             onClick={handleClear}
-            title="Xóa cuộc trò chuyện"
-            className="p-2 rounded-lg border border-white/10 text-gray-500 hover:text-[var(--color-secondary)] hover:border-[var(--color-secondary)]/40 transition-all shrink-0"
+            className="hidden md:flex btn-3d-secondary py-2 px-4 text-xs hover:text-[var(--color-danger)]"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" /> Dọn dẹp
           </button>
         </div>
 
         {/* ── Messages area ── */}
-        <div
-          className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar"
-          onClick={() => setShowModeDropdown(false)}
-        >
-          {/* Welcome banner */}
-          {messages.length === 1 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4"
-            >
-              {QUICK_PROMPTS.map((qp, i) => (
-                <motion.button
-                  key={i}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.07 }}
-                  whileHover={{ scale: 1.02 }}
-                  onClick={() => handleSend(qp.label)}
-                  className="p-3 rounded-xl border border-white/8 bg-black/40 text-left hover:border-[var(--color-primary)]/40 hover:bg-[var(--color-primary)]/5 transition-all group"
-                >
-                  <span className="text-xl block mb-1">{qp.icon}</span>
-                  <span className="text-[11px] font-mono text-gray-400 group-hover:text-white transition-colors line-clamp-2">
-                    {qp.label}
-                  </span>
-                </motion.button>
-              ))}
-            </motion.div>
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[var(--color-bg)]/30 custom-scrollbar">
+          
+          {/* Gamified Welcome Screen */}
+          {messages.length === 1 && messages[0].isWelcome && (
+            <div className="flex flex-col items-center justify-center h-full max-w-2xl mx-auto text-center px-4 pt-10 pb-4">
+              <div 
+                className="w-24 h-24 rounded-3xl flex items-center justify-center mb-6 shadow-sm border-4"
+                style={{ backgroundColor: currentMode.color + '15', borderColor: currentMode.color, color: currentMode.color }}
+              >
+                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+                  {currentMode.icon}
+                </motion.div>
+              </div>
+              
+              <h2 className="text-2xl font-black text-[var(--color-text)] mb-2 uppercase tracking-wide">
+                Bạn đã sẵn sàng?
+              </h2>
+              <p className="text-sm font-bold text-[var(--color-text-muted)] mb-8 max-w-md leading-relaxed">
+                Hãy chọn một gợi ý bên dưới hoặc tự nhập câu hỏi để bắt đầu bài học.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                {QUICK_PROMPTS.map((qp, i) => (
+                  <motion.button
+                    key={i}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleSend(qp.label)}
+                    className="card-3d p-4 flex items-center gap-4 text-left hover:border-[var(--color-primary)] transition-all group cursor-pointer"
+                  >
+                    <div className="text-2xl shrink-0 group-hover:scale-110 transition-transform">
+                      {qp.icon}
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-[var(--color-text)] group-hover:text-[var(--color-primary)] uppercase tracking-wide transition-colors">
+                        {qp.label}
+                      </p>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Message list */}
-          {messages.map((msg, i) => (
-            <MessageBubble
-              key={i}
-              msg={msg}
-              onSpeak={speak}
-              activeMode={activeMode}
-            />
-          ))}
+          {messages.map((msg, i) => {
+            if (msg.isWelcome) return null;
+            return (
+              <MessageBubble
+                key={i}
+                msg={msg}
+                onSpeak={speak}
+                activeMode={activeMode}
+              />
+            );
+          })}
 
           {/* Typing indicator */}
           <AnimatePresence>
@@ -572,25 +503,24 @@ const Chat = () => {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="flex items-end gap-2"
+                className="flex items-end gap-3"
               >
                 <div
-                  className="w-8 h-8 rounded-xl flex items-center justify-center border"
-                  style={{ background: currentMode.color + '18', borderColor: currentMode.color + '40', color: currentMode.color }}
+                  className="shrink-0 w-10 h-10 rounded-2xl border-2 border-[var(--color-surface-border)] bg-[var(--color-surface)] flex items-center justify-center text-sm font-bold shadow-sm"
+                  style={{ color: currentMode.color }}
                 >
                   {currentMode.icon}
                 </div>
-                <div className="bg-[#0a0a0a]/90 border border-white/8 px-4 py-3 rounded-2xl rounded-bl-sm flex gap-1.5 items-center">
+                <div className="bg-[var(--color-surface)] border-2 border-[var(--color-surface-border)] px-4 py-3 rounded-2xl rounded-bl-none flex gap-1.5 items-center shadow-sm h-[44px]">
                   {[0, 0.15, 0.3].map((delay, i) => (
                     <motion.span
                       key={i}
                       className="w-2 h-2 rounded-full"
                       style={{ background: currentMode.color }}
-                      animate={{ y: [0, -6, 0], opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 0.7, repeat: Infinity, delay }}
+                      animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                      transition={{ duration: 0.8, repeat: Infinity, delay }}
                     />
                   ))}
-                  <span className="text-[10px] text-gray-600 font-mono ml-1">Nexus AI đang nghĩ...</span>
                 </div>
               </motion.div>
             )}
@@ -599,35 +529,21 @@ const Chat = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* ── Input bar ── */}
-        <div className="shrink-0 p-4 border-t border-white/8" style={{ background: 'rgba(0,0,0,0.6)' }}>
-          {/* Mode indicator strip */}
-          <div className="flex items-center gap-2 mb-3">
-            <div
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border"
-              style={{ background: currentMode.color + '15', borderColor: currentMode.color + '40', color: currentMode.color }}
-            >
-              {currentMode.icon}
-              <span>{currentMode.label}</span>
-            </div>
-            <span className="text-[10px] text-gray-600 font-mono">{currentMode.desc}</span>
-          </div>
-
-          <div className="flex gap-2 items-end">
+        {/* ── Gamified Input Bar ── */}
+        <div className="shrink-0 p-4 border-t-2 border-[var(--color-surface-border)] bg-[var(--color-surface)]">
+          <div className="flex gap-3 items-end">
             {/* Voice button */}
             <button
               onClick={toggleListen}
-              title={isListening ? 'Dừng' : 'Nhập bằng giọng nói'}
-              className={`shrink-0 p-3 rounded-xl border transition-all duration-200 ${
-                isListening
-                  ? 'bg-red-500/20 text-red-400 border-red-500 animate-pulse'
-                  : 'bg-white/5 text-gray-500 border-white/10 hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]/40'
+              title={isListening ? 'Dừng phát âm' : 'Nhập bằng giọng nói'}
+              className={`shrink-0 p-3.5 h-[52px] w-[52px] flex justify-center items-center rounded-2xl ${
+                isListening ? 'btn-3d-danger animate-pulse' : 'btn-3d-secondary'
               }`}
             >
-              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </button>
 
-            {/* Text area */}
+            {/* Gamified Text area */}
             <div className="flex-1 relative">
               <textarea
                 ref={inputRef}
@@ -644,14 +560,9 @@ const Chat = () => {
                     handleSend();
                   }
                 }}
-                disabled={isTyping}
-                placeholder={
-                  isListening
-                    ? '🎙️ Đang nghe giọng nói...'
-                    : `Nhắn tin với Nexus AI (${currentMode.label})... Enter để gửi`
-                }
-                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-[var(--color-primary)]/60 font-mono transition-colors resize-none leading-relaxed disabled:opacity-60"
-                style={{ minHeight: '48px', maxHeight: '120px' }}
+                placeholder={isListening ? '🎙️ AI đang nghe...' : 'Hỏi Nexus AI điều gì đó... (Enter để gửi)'}
+                className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-2xl px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors resize-none leading-relaxed font-bold"
+                style={{ minHeight: '52px', maxHeight: '120px' }}
               />
             </div>
 
@@ -659,19 +570,13 @@ const Chat = () => {
             <button
               onClick={() => handleSend()}
               disabled={!input.trim() || isTyping}
-              className="shrink-0 p-3 rounded-xl font-bold transition-all duration-200 hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:scale-100"
-              style={{
-                background: input.trim() && !isTyping ? currentMode.color : 'rgba(255,255,255,0.05)',
-                color: input.trim() && !isTyping ? '#000' : '#6b7280',
-              }}
+              className={`shrink-0 p-3.5 h-[52px] w-[52px] flex justify-center items-center rounded-2xl ${
+                input.trim() && !isTyping ? 'btn-3d-primary' : 'btn-3d-secondary opacity-60'
+              }`}
             >
-              {isTyping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {isTyping ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
             </button>
           </div>
-
-          <p className="text-[10px] text-gray-700 font-mono text-center mt-2">
-            Nexus AI · Powered by Google Gemini · Enter gửi · Shift+Enter xuống dòng
-          </p>
         </div>
       </div>
     </motion.div>

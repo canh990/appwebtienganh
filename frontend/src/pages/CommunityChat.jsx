@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 import { pageVariants } from '../animations/variants';
 import toast from 'react-hot-toast';
-import { Send, Users, Activity, Sparkles, Loader2, Shield } from 'lucide-react';
+import { Send, Users, Activity, Sparkles, Shield } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 /* ── Socket ──────────────────────────────────────────────────────────────── */
@@ -18,14 +18,14 @@ const MarkdownMessage = ({ content }) => (
     components={{
       p: ({ children }) => <p className="mb-1 last:mb-0 leading-relaxed">{children}</p>,
       strong: ({ children }) => <strong className="text-[var(--color-primary)] font-bold">{children}</strong>,
-      em: ({ children }) => <em className="text-[var(--color-accent)] not-italic font-medium">{children}</em>,
+      em: ({ children }) => <em className="text-[var(--color-accent)] not-italic font-bold">{children}</em>,
       code: ({ inline, children }) =>
         inline ? (
-          <code className="bg-black/60 border border-[var(--color-primary)]/40 text-[var(--color-primary)] px-1.5 py-0.5 rounded text-[11px] font-mono">
+          <code className="bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] text-[var(--color-primary)] px-1.5 py-0.5 rounded-lg text-[11px] font-mono font-bold">
             {children}
           </code>
         ) : (
-          <pre className="my-2 p-3 bg-black/70 border border-white/10 rounded-lg overflow-x-auto text-[11px] font-mono text-gray-300">
+          <pre className="my-2 p-3 bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-xl overflow-x-auto text-[11px] font-mono text-[var(--color-text)]">
             <code>{children}</code>
           </pre>
         ),
@@ -35,12 +35,28 @@ const MarkdownMessage = ({ content }) => (
   </ReactMarkdown>
 );
 
+const MOCK_ONLINE_USERS = [
+  { username: 'Alex_owl', level: 12, status: 'online' },
+  { username: 'Sophia_study', level: 8, status: 'online' },
+  { username: 'Justin_Code', level: 15, status: 'online' },
+  { username: 'Emily_En', level: 5, status: 'idle' },
+  { username: 'DuoOwl', level: 99, status: 'online' },
+];
+
+const getAvatarGradient = (lvl) => {
+  const l = lvl || 1;
+  if (l >= 20) return 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white border-yellow-300';
+  if (l >= 11) return 'bg-gradient-to-br from-sky-400 to-indigo-500 text-white border-sky-300';
+  if (l >= 6) return 'bg-gradient-to-br from-emerald-400 to-teal-500 text-white border-emerald-300';
+  return 'bg-gradient-to-br from-slate-400 to-slate-500 text-white border-slate-300';
+};
+
 const CommunityChat = () => {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isConnected, setIsConnected] = useState(false);
-  
+
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -89,13 +105,47 @@ const CommunityChat = () => {
     }
   }, [user]);
 
+  /* Live chat simulation */
+  useEffect(() => {
+    const chatTemplates = [
+      "Hôm nay mình vừa học xong chủ đề Cyberpunk, từ 'Hacktivist' hay thật!",
+      "Mọi người có mẹo nào để nhớ phiên âm IPA nhanh không? 💡",
+      "Chào cả nhà! Chúc mọi người học tập vui vẻ nhé! 🦉",
+      "Mình vừa hoàn thành chuỗi 5 ngày streak, cố gắng đạt 7 ngày nào! 🔥",
+      "Đề trắc nghiệm hôm nay hơi khó ở phần nghe và viết, cần luyện tập thêm 🎧",
+      "Có ai muốn đua top BXH tuần này không? 🥇",
+      "Từ mới 'Security' viết là /sɪˈkjʊə.rə.ti/ đúng không cả nhà?",
+    ];
+
+    const interval = setInterval(() => {
+      if (!isConnected) return;
+      const mockUser = MOCK_ONLINE_USERS[Math.floor(Math.random() * MOCK_ONLINE_USERS.length)];
+      const text = chatTemplates[Math.floor(Math.random() * chatTemplates.length)];
+      
+      const newSimulatedMsg = {
+        id: `sim-${Date.now()}`,
+        text,
+        timestamp: new Date().toISOString(),
+        user: {
+          id: `user-${mockUser.username}`,
+          username: mockUser.username,
+          level: mockUser.level,
+        }
+      };
+      
+      setMessages((prev) => [...prev, newSimulatedMsg]);
+    }, 45000); // Simulated message every 45 seconds
+
+    return () => clearInterval(interval);
+  }, [isConnected]);
+
   /* Send message */
   const handleSend = useCallback(() => {
     if (!user) {
       toast.error('Bạn cần đăng nhập để chat!');
       return;
     }
-    
+
     const text = input.trim();
     if (!text) return;
 
@@ -104,16 +154,16 @@ const CommunityChat = () => {
       text,
       userId: user.id
     });
-    
+
     setInput('');
   }, [input, user]);
 
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <Shield className="w-16 h-16 text-gray-600 mb-4" />
-        <h2 className="text-2xl font-bold font-mono text-gray-400">Yêu cầu đăng nhập</h2>
-        <p className="text-gray-500 mt-2">Vui lòng đăng nhập để tham gia phòng chat cộng đồng.</p>
+        <Shield className="w-16 h-16 text-[var(--color-text-muted)] mb-4" />
+        <h2 className="text-2xl font-black text-[var(--color-text)] uppercase tracking-wide">Yêu cầu đăng nhập</h2>
+        <p className="text-[var(--color-text-muted)] font-bold mt-2">Vui lòng đăng nhập để tham gia phòng chat cộng đồng.</p>
       </div>
     );
   }
@@ -124,143 +174,204 @@ const CommunityChat = () => {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="flex h-[calc(100vh-120px)] max-w-5xl mx-auto flex-col overflow-hidden rounded-2xl border border-[var(--color-primary)]/30 shadow-[0_0_30px_rgba(0,240,255,0.1)]"
-      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(20px)' }}
+      className="flex flex-1 w-full flex-col overflow-hidden bg-[var(--color-surface)]"
     >
       {/* ── Chat header ── */}
-      <div className="shrink-0 px-6 py-4 border-b border-[var(--color-primary)]/20 flex items-center justify-between" style={{ background: 'rgba(0,0,0,0.5)' }}>
+      <div className="shrink-0 px-6 py-4 border-b-2 border-[var(--color-surface-border)] flex items-center justify-between bg-[var(--color-surface)] select-none">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/40">
-              <Users className="w-6 h-6 text-[var(--color-primary)]" />
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-[#1cb0f6] border-2 border-[#1899d6] text-white shadow-sm">
+              <Users className="w-6 h-6" />
             </div>
             {isConnected && (
-              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-black animate-pulse" />
+              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#58cc02] rounded-full border-2 border-[var(--color-surface)] animate-pulse" />
             )}
           </div>
           <div>
-            <h1 className="font-mono font-black text-lg text-white uppercase tracking-widest flex items-center gap-2">
-              Khu Vực Chung <span className="text-[var(--color-primary)]">#Global</span>
+            <h1 className="font-black text-lg text-[var(--color-text)] uppercase tracking-wider flex items-center gap-2">
+              Cộng Đồng <span className="text-[var(--color-primary)]">#Global</span>
             </h1>
-            <p className="text-xs text-gray-400 font-mono flex items-center gap-1.5">
-              <Activity className="w-3 h-3 text-green-400" />
-              {isConnected ? 'Mạng nơ-ron ổn định' : 'Đang kết nối...'}
+            <p className="text-xs text-[var(--color-text-muted)] font-bold flex items-center gap-1.5 mt-0.5">
+              <Activity className="w-3.5 h-3.5 text-[#58cc02]" />
+              {isConnected ? 'Đang trực tuyến' : 'Đang kết nối...'}
             </p>
           </div>
         </div>
-        
-        <div className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-primary)]/5 border border-[var(--color-primary)]/20">
+
+        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] shadow-sm">
           <Sparkles className="w-4 h-4 text-[var(--color-primary)]" />
-          <span className="text-xs font-mono text-gray-300">Hãy giao tiếp lịch sự!</span>
+          <span className="text-xs font-bold text-[var(--color-text)] uppercase tracking-wider">Giao tiếp lịch sự!</span>
         </div>
       </div>
 
-      {/* ── Messages area ── */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-        {messages.length === 0 && isConnected && (
-          <div className="text-center text-gray-500 font-mono mt-20">
-            <p>Chưa có tin nhắn nào.</p>
-            <p className="text-xs mt-2">Hãy là người đầu tiên phát tín hiệu!</p>
-          </div>
-        )}
+      {/* ── Main Chat Area Layout (horizontal flex) ── */}
+      <div className="flex-grow flex overflow-hidden min-h-0">
         
-        {messages.map((msg, i) => {
-          const isMe = msg.user.id === user.id;
-          
-          return (
-            <motion.div
-              key={msg.id || i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              className={`flex ${isMe ? 'justify-end' : 'justify-start'} items-end gap-3 group`}
-            >
-              {/* Avatar (Other) */}
-              {!isMe && (
-                <div className="shrink-0 w-10 h-10 rounded-full border border-gray-700 bg-gray-800 flex items-center justify-center overflow-hidden">
-                  <span className="font-bold text-gray-400 text-sm">
-                    {msg.user.username.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
+        {/* Left/Center: Messages area & Input bar */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Messages area */}
+          <div className="flex-grow overflow-y-auto p-6 space-y-6 bg-[var(--color-bg)]/30 custom-scrollbar">
+            {messages.length === 0 && isConnected && (
+              <div className="text-center text-[var(--color-text-muted)] font-bold mt-20 select-none">
+                <p className="text-lg">Chưa có tin nhắn nào.</p>
+                <p className="text-xs mt-2 uppercase tracking-wider">Hãy là người đầu tiên phát tín hiệu chào mọi người!</p>
+              </div>
+            )}
 
-              <div className={`flex flex-col gap-1 max-w-[75%] ${isMe ? 'items-end' : 'items-start'}`}>
-                {/* Username & Level */}
-                <div className={`flex items-center gap-2 text-[10px] font-mono ${isMe ? 'flex-row-reverse' : ''}`}>
-                  <span className="text-gray-400 font-bold">{msg.user.username}</span>
-                  <span className="px-1.5 py-0.5 rounded bg-gray-800 text-[var(--color-accent)] border border-gray-700">
-                    Lv.{msg.user.level || 1}
-                  </span>
-                  <span className="text-gray-600">
-                    {new Date(msg.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
+            {messages.map((msg, i) => {
+              const isMe = msg.user.id === user.id;
 
-                {/* Bubble */}
-                <div
-                  className={`rounded-2xl text-sm font-mono px-4 py-3 relative ${
-                    isMe
-                      ? 'bg-[var(--color-primary)] text-black rounded-br-sm shadow-[0_0_15px_rgba(0,240,255,0.15)]'
-                      : 'bg-[#151515] border border-white/10 text-gray-200 rounded-bl-sm'
-                  }`}
+              return (
+                <motion.div
+                  key={msg.id || i}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className={`flex ${isMe ? 'justify-end' : 'justify-start'} items-end gap-3 group`}
                 >
-                  <MarkdownMessage content={msg.text} />
-                </div>
+                  {/* Avatar (Other) */}
+                  {!isMe && (
+                    <div className={`shrink-0 w-10 h-10 rounded-2xl border-2 flex items-center justify-center overflow-hidden shadow-sm select-none ${getAvatarGradient(msg.user.level)}`}>
+                      <span className="font-black text-sm uppercase">
+                        {msg.user.username.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className={`flex flex-col gap-1 max-w-[75%] ${isMe ? 'items-end' : 'items-start'}`}>
+                    {/* Username & Level */}
+                    <div className={`flex items-center gap-2 text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider ${isMe ? 'flex-row-reverse' : ''} select-none`}>
+                      <span className="text-[var(--color-text)] font-extrabold">{msg.user.username}</span>
+                      <span className="px-1.5 py-0.5 rounded-lg bg-[var(--color-surface)] text-[var(--color-primary)] border-2 border-[var(--color-surface-border)] font-black shadow-sm">
+                        Lv.{msg.user.level || 1}
+                      </span>
+                      <span className="opacity-80">
+                        {new Date(msg.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+
+                    {/* Bubble */}
+                    <div
+                      className={`rounded-2xl text-sm px-4 py-3 relative border-2 ${
+                        isMe
+                          ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white rounded-br-none shadow-sm'
+                          : 'bg-[var(--color-surface)] border-[var(--color-surface-border)] text-[var(--color-text)] rounded-bl-none shadow-sm hover:shadow-md'
+                      }`}
+                      style={{
+                        borderBottomWidth: isMe ? '4px' : '2px',
+                        borderBottomColor: isMe ? 'var(--color-primary-hover)' : 'var(--color-surface-border)'
+                      }}
+                    >
+                      <MarkdownMessage content={msg.text} />
+                      
+                      {/* Floating reactions bar on hover */}
+                      <div className={`absolute -top-3 ${isMe ? 'left-2' : 'right-2'} bg-[var(--color-surface)] border border-[var(--color-surface-border)] rounded-full px-2 py-0.5 shadow-sm hidden group-hover:flex items-center gap-1.5 z-10 select-none`}>
+                        <button onClick={() => toast.success('Đã thả cảm xúc 👍')} className="hover:scale-125 transition-transform text-[11px] cursor-pointer">👍</button>
+                        <button onClick={() => toast.success('Đã thả cảm xúc ❤️')} className="hover:scale-125 transition-transform text-[11px] cursor-pointer">❤️</button>
+                        <button onClick={() => toast.success('Đã thả cảm xúc 😂')} className="hover:scale-125 transition-transform text-[11px] cursor-pointer">😂</button>
+                        <button onClick={() => toast.success('Đã thả cảm xúc 😮')} className="hover:scale-125 transition-transform text-[11px] cursor-pointer">😮</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Avatar (Me) */}
+                  {isMe && (
+                    <div className={`shrink-0 w-10 h-10 rounded-2xl border-2 flex items-center justify-center overflow-hidden shadow-sm select-none ${getAvatarGradient(user.level)}`}>
+                      <span className="font-black text-sm uppercase">
+                        {user.username.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Gamified Input bar */}
+          <div className="shrink-0 p-4 border-t-2 border-[var(--color-surface-border)] bg-[var(--color-surface)]">
+            <div className="flex gap-3 items-end">
+              {/* Gamified Text area */}
+              <div className="flex-1 relative">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  rows={1}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    e.target.style.height = 'auto';
+                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder="Nhắn gửi cộng đồng... (Enter để gửi)"
+                  className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-2xl px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors resize-none leading-relaxed font-bold shadow-inner"
+                  style={{ minHeight: '52px', maxHeight: '120px' }}
+                />
               </div>
 
-              {/* Avatar (Me) */}
-              {isMe && (
-                <div className="shrink-0 w-10 h-10 rounded-full border border-[var(--color-primary)] bg-[var(--color-primary)]/20 flex items-center justify-center overflow-hidden shadow-[0_0_10px_rgba(0,240,255,0.2)]">
-                  <span className="font-bold text-[var(--color-primary)] text-sm">
-                    {msg.user.username.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-            </motion.div>
-          );
-        })}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* ── Input bar ── */}
-      <div className="shrink-0 p-4 border-t border-[var(--color-primary)]/20" style={{ background: 'rgba(0,0,0,0.6)' }}>
-        <div className="flex gap-3 items-end">
-          {/* Text area */}
-          <div className="flex-1 relative">
-            <textarea
-              ref={inputRef}
-              value={input}
-              rows={1}
-              onChange={(e) => {
-                setInput(e.target.value);
-                e.target.style.height = 'auto';
-                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder="Nhập tín hiệu truyền đi... (Enter để gửi)"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-[var(--color-primary)]/60 font-mono transition-colors resize-none leading-relaxed"
-              style={{ minHeight: '52px', maxHeight: '120px' }}
-            />
+              {/* Send button */}
+              <button
+                onClick={() => handleSend()}
+                disabled={!input.trim() || !isConnected}
+                className={`shrink-0 p-3.5 h-[52px] w-[52px] flex justify-center items-center rounded-2xl ${
+                  input.trim() && isConnected ? 'btn-3d-primary' : 'btn-3d-secondary opacity-60'
+                }`}
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-
-          {/* Send button */}
-          <button
-            onClick={() => handleSend()}
-            disabled={!input.trim() || !isConnected}
-            className="shrink-0 p-3.5 rounded-xl font-bold transition-all duration-200 hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:scale-100"
-            style={{
-              background: input.trim() && isConnected ? 'var(--color-primary)' : 'rgba(255,255,255,0.05)',
-              color: input.trim() && isConnected ? '#000' : '#6b7280',
-            }}
-          >
-            <Send className="w-5 h-5" />
-          </button>
         </div>
+
+        {/* Right: Sidebar (Online Members) */}
+        <div className="hidden lg:flex w-64 border-l-2 border-[var(--color-surface-border)] flex-col bg-[var(--color-surface)] shrink-0 select-none">
+          <div className="p-4 border-b border-[var(--color-surface-border)]">
+            <h3 className="text-xs font-black uppercase tracking-wider text-[var(--color-text)] flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#58cc02] animate-pulse" />
+              <span>Thành viên trực tuyến ({MOCK_ONLINE_USERS.length + 1})</span>
+            </h3>
+          </div>
+          <div className="flex-grow overflow-y-auto p-3 space-y-2">
+            {/* Me */}
+            <div className="flex items-center gap-3 p-2 rounded-xl bg-sky-50 dark:bg-sky-950/20 border border-[var(--color-primary)]/20">
+              <div className={`w-8 h-8 rounded-xl border flex items-center justify-center text-xs font-black shrink-0 ${getAvatarGradient(user.level)}`}>
+                {user.username.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-extrabold text-xs text-[var(--color-primary)] truncate flex items-center gap-1">
+                  {user.username}
+                  <span className="text-[7px] bg-[var(--color-primary)] text-white px-1 py-0.5 rounded font-black uppercase tracking-wider scale-90">Bạn</span>
+                </p>
+                <p className="text-[9px] text-[var(--color-text-muted)] font-bold">Cấp {user.level || 1} · Online</p>
+              </div>
+            </div>
+
+            {/* Mock Users */}
+            {MOCK_ONLINE_USERS.map((u) => (
+              <div key={u.username} className="flex items-center gap-3 p-2 rounded-xl hover:bg-[var(--color-bg)] transition-colors">
+                <div className={`w-8 h-8 rounded-xl border flex items-center justify-center text-xs font-black shrink-0 ${getAvatarGradient(u.level)}`}>
+                  {u.username.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-black text-xs text-[var(--color-text)] truncate">{u.username}</p>
+                  <p className="text-[9px] text-[var(--color-text-muted)] font-bold flex items-center gap-1">
+                    <span>Cấp {u.level}</span>
+                    <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                    <span className={u.status === 'online' ? 'text-[#58cc02]' : 'text-amber-500'}>
+                      {u.status === 'online' ? 'Online' : 'Vắng mặt'}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </motion.div>
   );

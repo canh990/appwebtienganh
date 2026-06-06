@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Terminal, Book, User, Zap, LogOut, Bot, Users, Moon, Sun, Sparkles } from 'lucide-react';
+import { Book, User, Zap, LogOut, Bot, Users, Moon, Sun, Sparkles, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -24,38 +24,38 @@ const Navbar = () => {
   ];
 
   return (
-    <div className="sticky top-0 z-50 px-4 pt-4 pb-2">
-      <nav className="glass-panel mx-auto max-w-7xl px-6 py-3.5 flex justify-between items-center">
+    <div className="sticky top-0 z-50 w-full bg-[var(--color-surface)] border-b-2 border-[var(--color-surface-border)] px-4 py-2">
+      <nav className="mx-auto max-w-7xl px-2 py-1 flex justify-between items-center">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)] group-hover:bg-[var(--color-primary)] group-hover:text-white transition-all duration-300">
-            <Sparkles className="w-5 h-5" />
+        <Link to="/" className="flex items-center gap-2.5 group">
+          <div className="p-2 rounded-xl bg-sky-100 dark:bg-sky-950 text-[var(--color-primary)] group-hover:scale-110 transition-transform duration-300">
+            <Sparkles className="w-5 h-5 fill-current" />
           </div>
-          <span className="text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)]">
+          <span className="text-2xl font-black tracking-tight text-[var(--color-primary)]">
             CyberLingo
           </span>
         </Link>
 
         {/* Navigation Links */}
-        <div className="hidden md:flex gap-2 items-center">
+        <div className="hidden md:flex gap-1.5 items-center">
           {navLinks.map((link) => {
             const isActive = location.pathname === link.path;
             return (
               <Link
                 key={link.name}
                 to={link.path}
-                className={`relative px-4 py-2 flex items-center gap-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                className={`relative px-4 py-2.5 flex items-center gap-2 rounded-xl text-sm font-bold transition-all duration-200 ${
                   isActive 
-                    ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10' 
-                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-border)]/50'
+                    ? 'text-[var(--color-primary)] bg-sky-50 dark:bg-sky-950/40' 
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg)]'
                 }`}
               >
                 {link.icon}
-                {link.name}
+                <span>{link.name}</span>
                 {isActive && (
                   <motion.div 
                     layoutId="navbar-indicator"
-                    className="absolute inset-0 border border-[var(--color-primary)]/30 rounded-xl pointer-events-none"
+                    className="absolute bottom-0 left-4 right-4 h-0.5 bg-[var(--color-primary)] rounded-full"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
@@ -65,11 +65,11 @@ const Navbar = () => {
         </div>
 
         {/* Right Actions */}
-        <div className="flex gap-3 items-center">
+        <div className="flex gap-2 items-center">
           {/* Theme Toggle */}
           <button 
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-border)]/50 transition-all duration-300"
+            className="p-2.5 rounded-xl text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg)] transition-all duration-200 cursor-pointer"
             aria-label="Toggle theme"
           >
             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -80,21 +80,29 @@ const Navbar = () => {
           {user ? (
             <div className="flex items-center gap-3">
               <Link 
-                to="/profile" 
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-[var(--color-surface-border)]/50 transition-all duration-300 group"
+                to="/vocabulary?add=true"
+                className="btn-3d-primary py-2 px-3 text-xs rounded-xl flex items-center gap-1.5 font-black uppercase tracking-wider shrink-0"
               >
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] flex items-center justify-center shadow-sm">
-                  <span className="text-white font-bold text-sm">
+                <Plus className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Thêm từ vựng</span>
+              </Link>
+
+              <Link 
+                to="/profile" 
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-[var(--color-bg)] transition-all duration-200 group"
+              >
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] flex items-center justify-center shadow-sm">
+                  <span className="text-white font-extrabold text-sm">
                     {user.username.charAt(0).toUpperCase()}
                   </span>
                 </div>
-                <span className="text-sm font-medium hidden lg:block group-hover:text-[var(--color-primary)] transition-colors">
+                <span className="text-sm font-bold hidden lg:block group-hover:text-[var(--color-primary)] transition-colors">
                   {user.username}
                 </span>
               </Link>
               <button 
                 onClick={handleLogout} 
-                className="p-2.5 rounded-xl text-gray-400 hover:text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-all duration-300"
+                className="p-2.5 rounded-xl text-gray-400 hover:text-[var(--color-danger)] hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200 cursor-pointer"
                 title="Đăng xuất"
               >
                 <LogOut className="w-5 h-5" />
@@ -102,7 +110,7 @@ const Navbar = () => {
             </div>
           ) : (
             <Link to="/auth">
-              <button className="btn-primary py-2 px-5 text-sm rounded-xl">Đăng nhập</button>
+              <button className="btn-3d-primary py-2 px-4 text-xs rounded-xl">Đăng nhập</button>
             </Link>
           )}
         </div>

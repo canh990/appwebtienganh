@@ -16,17 +16,20 @@ const XPBar = ({ xp, xpForNextLevel, level }) => {
   const pct = Math.min(100, Math.round((xp % 1000) / 10));
   return (
     <div className="mb-2">
-      <div className="flex justify-between text-xs font-medium text-[var(--color-text-muted)] mb-2">
-        <span>XP: {xp}</span>
-        <span>Cần: {xpForNextLevel} để lên Lvl {level + 1}</span>
+      <div className="flex justify-between items-center text-xs font-bold text-[var(--color-text-muted)] mb-2 uppercase tracking-wider">
+        <span>Tích lũy: {xp} XP</span>
+        <span>Cần {xpForNextLevel - (xp % 1000)} XP để lên cấp {level + 1}</span>
       </div>
-      <div className="w-full h-2.5 bg-[var(--color-surface-border)] rounded-full overflow-hidden">
+      <div className="w-full h-5 bg-[var(--color-surface-border)] rounded-full overflow-hidden border-2 border-[var(--color-surface-border)] shadow-inner">
         <motion.div
-          className="h-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] rounded-full relative"
+          className="h-full bg-gradient-to-r from-sky-400 to-[var(--color-primary)] rounded-full relative"
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 1.2, ease: 'easeOut' }}
-        />
+        >
+          {/* Shiny effect on the progress bar */}
+          <div className="absolute inset-0 bg-white/20 skew-x-12 animate-pulse" />
+        </motion.div>
       </div>
     </div>
   );
@@ -38,63 +41,64 @@ const StatCard = ({ label, value, icon, color, delay = 0 }) => (
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay, duration: 0.4 }}
-    className="glass-panel p-6 flex flex-col justify-between gap-4 group cursor-default"
+    className="card-3d p-5 flex items-center gap-4 cursor-default bg-[var(--color-surface)] hover:-translate-y-1 transition-transform"
   >
-    <div className="flex justify-between items-start">
-      <div 
-        className="p-3 rounded-2xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
-        style={{ backgroundColor: `${color}15`, color: color }}
-      >
-        {icon}
-      </div>
-      <div className="w-10 h-10 rounded-full blur-2xl opacity-20 absolute -right-4 -top-4 transition-opacity duration-300 group-hover:opacity-40" style={{ background: color }} />
+    <div
+      className="p-3.5 rounded-2xl shrink-0 shadow-md text-white font-bold"
+      style={{ backgroundColor: color }}
+    >
+      {icon}
     </div>
     <div>
-      <p className="text-sm font-medium text-[var(--color-text-muted)]">{label}</p>
-      <p className="text-3xl font-bold text-[var(--color-text)] mt-1">{value}</p>
+      <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">{label}</p>
+      <p className="text-2xl font-black text-[var(--color-text)] mt-0.5">{value}</p>
     </div>
   </motion.div>
 );
 
 // ─── Leaderboard Row ───────────────────────────────────────────────────────────
-const RANK_COLORS = ['#fbbf24', '#94a3b8', '#b45309'];
+const RANK_MEDALS = ['🥇', '🥈', '🥉'];
 const LeaderboardRow = ({ user: u, rank, currentId }) => {
   const isMe = u.id === currentId;
-  const medal = rank <= 3 ? RANK_COLORS[rank - 1] : null;
+  const isTop3 = rank <= 3;
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: rank * 0.05 }}
-      className={`flex items-center gap-4 px-5 py-4 rounded-2xl border transition-all duration-200 ${
-        isMe
-          ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5 shadow-sm'
-          : 'border-[var(--color-surface-border)] bg-[var(--color-surface)] hover:shadow-md hover:-translate-y-0.5'
-      }`}
+      className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl border-2 transition-all duration-200 ${isMe
+          ? 'border-[var(--color-primary)] bg-sky-50/50 dark:bg-sky-950/20 shadow-sm'
+          : 'border-[var(--color-surface-border)] bg-[var(--color-surface)] hover:border-gray-300 dark:hover:border-slate-600'
+        }`}
     >
       <div className="w-8 flex justify-center shrink-0">
-        {medal ? (
-          <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-sm" style={{ backgroundColor: `${medal}20`, color: medal }}>
-            <Trophy className="w-4 h-4" />
-          </div>
+        {isTop3 ? (
+          <span className="text-2xl select-none">{RANK_MEDALS[rank - 1]}</span>
         ) : (
-          <span className="font-bold text-[var(--color-text-muted)] text-lg">#{rank}</span>
+          <span className="font-extrabold text-[var(--color-text-muted)] text-base">#{rank}</span>
         )}
       </div>
+
+      {/* User avatar */}
+      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center font-bold text-sky-800 dark:text-sky-200 text-base shadow-sm">
+        {(u.username || 'U')[0].toUpperCase()}
+      </div>
+
       <div className="flex-1 min-w-0">
-        <p className={`font-bold text-base truncate flex items-center gap-2 ${isMe ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+        <p className={`font-black text-sm truncate flex items-center gap-1.5 ${isMe ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
           {u.username}
-          {isMe && <span className="text-[10px] uppercase px-2 py-0.5 rounded-full bg-[var(--color-primary)] text-white font-bold">Bạn</span>}
+          {isMe && <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-md bg-[var(--color-primary)] text-white font-extrabold tracking-wider">Bạn</span>}
         </p>
-        <p className="text-xs font-medium text-[var(--color-text-muted)] flex items-center gap-1.5 mt-0.5">
-          <span>Lv.{u.level}</span>
+        <p className="text-xs font-bold text-[var(--color-text-muted)] flex items-center gap-1.5 mt-0.5">
+          <span>Cấp {u.level}</span>
           <span className="w-1 h-1 rounded-full bg-[var(--color-surface-border)]" />
-          <span className="flex items-center text-[var(--color-warning)]">
-            <Flame className="w-3 h-3 mr-0.5" /> {u.streak} chuỗi
+          <span className="flex items-center text-orange-500 font-bold">
+            <Flame className="w-3.5 h-3.5 mr-0.5 fill-current" /> {u.streak} ngày
           </span>
         </p>
       </div>
-      <span className="font-extrabold text-[var(--color-accent)] bg-[var(--color-accent)]/10 px-3 py-1.5 rounded-lg text-sm">
+
+      <span className="font-black text-[var(--color-primary)] bg-sky-50 dark:bg-sky-950/40 px-3 py-1.5 rounded-xl text-sm border-2 border-transparent border-b-[var(--color-surface-border)]">
         {u.xp} XP
       </span>
     </motion.div>
@@ -108,24 +112,25 @@ const QuickAction = ({ icon, label, to, color, onClick, delay = 0 }) => {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay, duration: 0.3 }}
-      whileHover={{ y: -4, shadow: 'md' }}
-      whileTap={{ scale: 0.98 }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className="glass-panel p-6 flex flex-col items-center gap-4 cursor-pointer group hover:border-[var(--color-primary)]/50"
+      className="card-3d p-5 flex flex-col items-center gap-3 cursor-pointer group hover:border-[var(--color-primary)]"
     >
-      <div className="p-4 rounded-2xl transition-all duration-300 group-hover:scale-110 shadow-sm"
-        style={{ backgroundColor: color, color: '#fff' }}>
+      <div
+        className="p-3.5 rounded-2xl transition-transform duration-200 group-hover:scale-110 shadow-md text-white"
+        style={{ backgroundColor: color }}
+      >
         {icon}
       </div>
-      <span className="text-sm font-semibold text-[var(--color-text)] text-center">{label}</span>
+      <span className="text-xs font-black text-[var(--color-text)] text-center uppercase tracking-wider">{label}</span>
     </motion.div>
   );
-  return to ? <Link to={to}>{content}</Link> : content;
+  return to ? <Link to={to} className="w-full">{content}</Link> : <div className="w-full">{content}</div>;
 };
 
 // ─── Skeleton loader ─────────────────────────────────────────────────────────
 const Skeleton = ({ className }) => (
-  <div className={`bg-[var(--color-surface-border)] rounded-xl animate-pulse ${className}`} />
+  <div className={`bg-[var(--color-surface-border)] rounded-2xl animate-pulse ${className}`} />
 );
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
@@ -144,7 +149,7 @@ const Dashboard = () => {
     const fetchAll = async () => {
       try {
         setLoadingStats(true);
-        const [s] = await Promise.all([getMyStats(), updateStreak().catch(() => {})]);
+        const [s] = await Promise.all([getMyStats(), updateStreak().catch(() => { })]);
         setStats(s);
       } catch (e) {
         toast.error('Không thể tải thống kê cá nhân');
@@ -169,7 +174,7 @@ const Dashboard = () => {
   const handleAI = async () => {
     setAiLoading(true);
     try {
-      const data = await generateAIWords('Modern Tech'); // Changed from Cyberpunk
+      const data = await generateAIWords('Modern Tech');
       toast.success(data.message || 'AI đã tạo dữ liệu mới!');
       const s = await getMyStats();
       setStats(s);
@@ -185,15 +190,15 @@ const Dashboard = () => {
     return (
       <motion.div
         variants={pageVariants} initial="initial" animate="animate" exit="exit"
-        className="min-h-[60vh] flex flex-col items-center justify-center text-center"
+        className="min-h-[60vh] flex flex-col items-center justify-center text-center p-4 bg-[var(--color-bg)]"
       >
-        <div className="w-20 h-20 bg-[var(--color-secondary)]/10 rounded-full flex items-center justify-center mb-6">
-          <Lock className="w-10 h-10 text-[var(--color-secondary)]" />
+        <div className="w-20 h-20 bg-orange-100 dark:bg-orange-950/20 rounded-full flex items-center justify-center mb-6 border-2 border-orange-200">
+          <Lock className="w-10 h-10 text-orange-500" />
         </div>
-        <h2 className="text-3xl font-extrabold tracking-tight mb-4 text-[var(--color-text)]">Truy cập bị từ chối</h2>
-        <p className="text-[var(--color-text-muted)] text-lg mb-8 max-w-md">Vui lòng đăng nhập để theo dõi tiến độ và trải nghiệm các tính năng học tập.</p>
+        <h2 className="text-3xl font-black mb-3 text-[var(--color-text)]">Truy cập bị giới hạn</h2>
+        <p className="text-[var(--color-text-muted)] text-base mb-8 max-w-sm font-medium">Vui lòng đăng nhập để lưu trữ tiến độ, thi đua bảng xếp hạng và học tập từ vựng.</p>
         <Link to="/auth">
-          <button className="btn-primary text-lg px-8 py-3 rounded-2xl">Đăng Nhập Ngay</button>
+          <button className="btn-3d-primary text-lg px-8 py-3 rounded-2xl">Đăng nhập ngay</button>
         </Link>
       </motion.div>
     );
@@ -205,76 +210,76 @@ const Dashboard = () => {
 
   const statCards = [
     {
-      label: 'Chuỗi Ngày', value: `${stats?.streak ?? authUser?.streak ?? 0} 🔥`,
-      icon: <Flame className="w-7 h-7" />, color: 'var(--color-warning)'
+      label: 'Chuỗi Ngày', value: `${stats?.streak ?? authUser?.streak ?? 0} ngày 🔥`,
+      icon: <Flame className="w-6 h-6 fill-current" />, color: '#ff9600'
     },
     {
       label: 'Từ Đã Học', value: stats ? `${stats.wordsLearned}/${stats.totalVocab}` : '—',
-      icon: <BookOpen className="w-7 h-7" />, color: 'var(--color-primary)'
+      icon: <BookOpen className="w-6 h-6" />, color: '#1cb0f6'
     },
     {
-      label: 'Bài Quiz', value: stats?.stats?.totalQuizzesTaken ?? 0,
-      icon: <Brain className="w-7 h-7" />, color: 'var(--color-secondary)'
+      label: 'Bài Kiểm Tra', value: stats?.stats?.totalQuizzesTaken ?? 0,
+      icon: <Brain className="w-6 h-6" />, color: '#b862f9'
     },
     {
       label: 'Điểm Cao Nhất', value: stats?.stats?.highestScore ?? 0,
-      icon: <Star className="w-7 h-7" />, color: 'var(--color-accent)'
+      icon: <Star className="w-6 h-6 fill-current" />, color: '#ffc800'
     },
   ];
 
   return (
     <motion.div
       variants={pageVariants} initial="initial" animate="animate" exit="exit"
-      className="max-w-6xl mx-auto space-y-8 pb-12"
+      className="max-w-6xl mx-auto space-y-8 pb-16 px-4 bg-[var(--color-bg)] pt-4"
     >
       {/* ── Header / Profile Hero ─────────────────────────────────────────── */}
-      <section className="glass-panel p-8 md:p-10 relative overflow-hidden">
-        {/* Soft background gradient */}
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-[var(--color-primary)]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-[var(--color-secondary)]/10 rounded-full blur-3xl pointer-events-none" />
+      <section className="card-3d p-6 md:p-8 relative overflow-hidden bg-[var(--color-surface)]">
+        {/* Soft background circles */}
+        <div className="absolute top-0 right-0 -mr-24 -mt-24 w-80 h-80 bg-sky-200/20 dark:bg-sky-900/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-80 h-80 bg-green-200/20 dark:bg-green-900/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
-          {/* Avatar */}
-          <div className="relative shrink-0">
-            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] flex items-center justify-center p-1 shadow-lg">
-              <div className="w-full h-full bg-[var(--color-surface)] rounded-full flex items-center justify-center">
-                <span className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)]">
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-8 text-center md:text-left">
+          {/* Avatar container */}
+          <div className="relative shrink-0 select-none">
+            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[var(--color-primary)] to-sky-300 flex items-center justify-center p-1 shadow-lg border-2 border-[var(--color-surface-border)]">
+              <div className="w-full h-full bg-[var(--color-surface)] rounded-2xl flex items-center justify-center">
+                <span className="text-4xl font-black text-[var(--color-primary)]">
                   {(authUser.username || 'U')[0].toUpperCase()}
                 </span>
               </div>
             </div>
-            <div className="absolute -bottom-2 right-2 bg-[var(--color-text)] text-[var(--color-surface)] text-xs font-bold px-3 py-1 rounded-full shadow-md border-2 border-[var(--color-surface)]">
+            <div className="absolute -bottom-2 -right-2 bg-orange-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md border-2 border-[var(--color-surface)] uppercase tracking-wider">
               LV.{level}
             </div>
           </div>
 
           {/* Info */}
           <div className="flex-1 w-full min-w-0">
-            <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-2 justify-center md:justify-start">
-              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[var(--color-text)]">
-                Xin chào, {authUser.username}
+            <div className="flex flex-col md:flex-row md:items-center gap-2 mb-1.5 justify-center md:justify-start">
+              <h1 className="text-2xl md:text-3xl font-black text-[var(--color-text)]">
+                Xin chào, {authUser.username}!
               </h1>
-              <span className="text-xs font-semibold bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-3 py-1 rounded-full w-max mx-auto md:mx-0">
+              <span className="text-[10px] font-black bg-sky-100 dark:bg-sky-950 text-[var(--color-primary)] px-2.5 py-0.5 rounded-full w-max mx-auto md:mx-0 uppercase tracking-widest border border-sky-200 dark:border-sky-800">
                 Học Viên
               </span>
             </div>
-            <p className="text-[var(--color-text-muted)] text-base font-medium mb-6">
-              Sẵn sàng để tiếp tục hành trình học ngôn ngữ của bạn hôm nay?
+            <p className="text-[var(--color-text-muted)] text-sm font-bold mb-4">
+              Mỗi ngày là một bước tiến mới. Hãy tiếp tục hành trình học tiếng Anh hôm nay nhé!
             </p>
             {loadingStats
-              ? <Skeleton className="h-6 w-full max-w-md" />
+              ? <Skeleton className="h-10 w-full max-w-md" />
               : <div className="max-w-md"><XPBar xp={xp} xpForNextLevel={xpForNextLevel} level={level} /></div>
             }
           </div>
 
           {/* Level Progress Circle */}
-          <div className="shrink-0 hidden lg:block">
-            <div className="relative w-32 h-32 flex items-center justify-center bg-[var(--color-surface)] rounded-full shadow-sm border border-[var(--color-surface-border)]">
+          <div className="shrink-0 hidden lg:block select-none">
+            <div className="relative w-28 h-28 flex items-center justify-center bg-[var(--color-surface)] rounded-2xl border-2 border-[var(--color-surface-border)] shadow-sm">
               <svg className="w-full h-full -rotate-90 p-2" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="42" fill="transparent" stroke="var(--color-surface-border)" strokeWidth="6" />
+                <circle cx="50" cy="50" r="42" fill="transparent" stroke="var(--color-surface-border)" strokeWidth="8" />
                 <motion.circle
                   cx="50" cy="50" r="42" fill="transparent"
-                  stroke="var(--color-primary)" strokeWidth="6"
+                  stroke="var(--color-primary)" strokeWidth="8"
                   strokeLinecap="round"
                   strokeDasharray="264"
                   initial={{ strokeDashoffset: 264 }}
@@ -282,9 +287,9 @@ const Dashboard = () => {
                   transition={{ duration: 1.5, ease: 'easeOut', delay: 0.5 }}
                 />
               </svg>
-              <div className="absolute text-center flex flex-col items-center">
-                <span className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Cấp Độ</span>
-                <span className="text-4xl font-black text-[var(--color-text)] leading-none mt-1">{level}</span>
+              <div className="absolute text-center flex flex-col items-center justify-center">
+                <span className="text-[9px] font-extrabold text-[var(--color-text-muted)] uppercase tracking-widest">Cấp Độ</span>
+                <span className="text-3xl font-black text-[var(--color-text)] leading-none mt-0.5">{level}</span>
               </div>
             </div>
           </div>
@@ -294,27 +299,27 @@ const Dashboard = () => {
       {/* ── Stat Cards ────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {loadingStats
-          ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-2xl" />)
+          ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)
           : statCards.map((s, i) => <StatCard key={i} {...s} delay={i * 0.08} />)
         }
       </div>
 
       {/* ── Quick Actions ─────────────────────────────────────────────────── */}
       <section className="pt-2">
-        <h2 className="text-xl font-bold tracking-tight mb-5 flex items-center gap-2">
-          <Zap className="w-5 h-5 text-[var(--color-accent)]" /> Hành Động Nhanh
+        <h2 className="text-lg font-black uppercase tracking-wider mb-4 flex items-center gap-2 text-[var(--color-text)]">
+          <Zap className="w-5 h-5 text-yellow-500 fill-current" /> Lối Tắt Học Tập
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <QuickAction icon={<BookOpen className="w-7 h-7" />} label="Học Từ Vựng" to="/vocabulary" color="var(--color-primary)" delay={0.1} />
-          <QuickAction icon={<Brain className="w-7 h-7" />} label="Bài Kiểm Tra" to="/quiz" color="var(--color-secondary)" delay={0.15} />
+          <QuickAction icon={<BookOpen className="w-6 h-6" />} label="Học Từ Vựng" to="/vocabulary" color="#1cb0f6" delay={0.1} />
+          <QuickAction icon={<Brain className="w-6 h-6" />} label="Làm Bài Quiz" to="/quiz" color="#b862f9" delay={0.15} />
           <QuickAction
-            icon={aiLoading ? <Cpu className="w-7 h-7 animate-spin" /> : <Cpu className="w-7 h-7" />}
+            icon={aiLoading ? <Cpu className="w-6 h-6 animate-spin" /> : <Cpu className="w-6 h-6" />}
             label={aiLoading ? 'Đang tạo...' : 'Tạo Dữ Liệu AI'}
-            color="var(--color-accent)"
+            color="#58cc02"
             onClick={handleAI}
             delay={0.2}
           />
-          <QuickAction icon={<Users className="w-7 h-7" />} label="Bảng Xếp Hạng" color="var(--color-warning)" onClick={() => document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' })} delay={0.25} />
+          <QuickAction icon={<Users className="w-6 h-6" />} label="BX Hạng" color="#ff9600" onClick={() => document.getElementById('leaderboard-section').scrollIntoView({ behavior: 'smooth' })} delay={0.25} />
         </div>
       </section>
 
@@ -322,34 +327,34 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
 
         {/* Progress chart */}
-        <div className="lg:col-span-2 glass-panel p-6 md:p-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-[var(--color-primary)]" /> Tiến Độ XP
+        <div className="lg:col-span-2 card-3d p-6 bg-[var(--color-surface)]">
+          <div className="flex justify-between items-center mb-5">
+            <h2 className="text-lg font-black uppercase tracking-wider flex items-center gap-2 text-[var(--color-text)]">
+              <TrendingUp className="w-5 h-5 text-[var(--color-primary)]" /> Thống Kê Tuần
             </h2>
-            <span className="text-xs font-semibold px-3 py-1 bg-[var(--color-surface-border)] rounded-full text-[var(--color-text-muted)]">Tuần này</span>
+            <span className="text-xs font-bold px-3 py-1.5 bg-[var(--color-bg)] rounded-xl text-[var(--color-text-muted)] border border-[var(--color-surface-border)]">Hoạt Động</span>
           </div>
           {loadingStats ? (
             <Skeleton className="h-56 w-full" />
           ) : (
             <>
-              <div className="h-56 flex items-end justify-between gap-3 md:gap-6 border-b border-[var(--color-surface-border)] relative pb-2 pt-6">
-                {/* Simulated bars */}
-                {['T2','T3','T4','T5','T6','T7','CN'].map((day, i) => {
+              <div className="h-52 flex items-end justify-between gap-3 md:gap-6 border-b-2 border-[var(--color-surface-border)] relative pb-2 pt-6">
+                {['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'].map((day, i) => {
                   const base = (xp % 100) || 30;
                   const heights = [
                     Math.min(95, base * 0.6), Math.min(95, base * 1.1), Math.min(95, base * 0.75),
                     Math.min(95, base * 1.3), Math.min(95, base * 0.9), Math.min(95, base * 1.2), Math.min(95, base * 1.5),
                   ];
                   const h = Math.round(heights[i]);
-                  const isToday = i === new Date().getDay() - 1;
+                  const currentDayIdx = new Date().getDay() - 1;
+                  const isToday = i === (currentDayIdx < 0 ? 6 : currentDayIdx);
                   return (
                     <div key={i} className="flex-1 flex flex-col items-center justify-end h-full gap-2 group cursor-pointer relative">
-                      <div className="absolute -top-8 bg-[var(--color-text)] text-[var(--color-bg)] text-[10px] font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                      <div className="absolute -top-8 bg-[var(--color-text)] text-[var(--color-bg)] text-[10px] font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                         {h * 10} XP
                       </div>
                       <motion.div
-                        className={`w-full rounded-md ${isToday ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-primary)]/20 group-hover:bg-[var(--color-primary)]/40'} transition-colors`}
+                        className={`w-full rounded-t-lg ${isToday ? 'bg-[var(--color-primary)] shadow-sm' : 'bg-sky-200 dark:bg-slate-700 group-hover:bg-sky-300 dark:group-hover:bg-slate-600'} transition-colors`}
                         initial={{ height: 0 }}
                         animate={{ height: `${h}%` }}
                         transition={{ delay: i * 0.08, duration: 0.6, ease: 'easeOut' }}
@@ -359,54 +364,58 @@ const Dashboard = () => {
                   );
                 })}
               </div>
-              <div className="flex justify-between mt-3 text-xs font-medium text-[var(--color-text-muted)] px-1">
-                {['T2','T3','T4','T5','T6','T7','CN'].map((d, i) => (
-                  <span key={i} className={`flex-1 text-center ${i === new Date().getDay() - 1 ? 'text-[var(--color-text)] font-bold bg-[var(--color-surface-border)] rounded-md py-0.5' : ''}`}>{d}</span>
-                ))}
+              <div className="flex justify-between mt-3 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] px-1">
+                {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((d, i) => {
+                  const currentDayIdx = new Date().getDay() - 1;
+                  const isToday = i === (currentDayIdx < 0 ? 6 : currentDayIdx);
+                  return (
+                    <span key={i} className={`flex-1 text-center py-1 rounded-lg ${isToday ? 'text-[var(--color-primary)] font-black bg-sky-50 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-900' : ''}`}>{d}</span>
+                  );
+                })}
               </div>
             </>
           )}
         </div>
 
         {/* Daily Missions */}
-        <div className="glass-panel p-6 md:p-8">
-          <h2 className="text-xl font-bold tracking-tight mb-6 flex items-center gap-2">
-            <Target className="w-5 h-5 text-[var(--color-secondary)]" /> Mục Tiêu Ngày
+        <div className="card-3d p-6 bg-[var(--color-surface)]">
+          <h2 className="text-lg font-black uppercase tracking-wider mb-5 flex items-center gap-2 text-[var(--color-text)]">
+            <Target className="w-5 h-5 text-orange-500" /> Nhiệm vụ ngày
           </h2>
           {loadingStats ? (
             <div className="space-y-4">
-              {[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               {[
                 {
-                  title: 'Hoàn thành bài kiểm tra', icon: <Brain className="w-5 h-5" />,
+                  title: 'Vượt ải trắc nghiệm', icon: <Brain className="w-4 h-4 fill-current" />,
                   progress: Math.min(100, (stats?.stats?.totalQuizzesTaken || 0) >= 1 ? 100 : 0),
-                  color: 'var(--color-secondary)'
+                  color: '#b862f9'
                 },
                 {
-                  title: 'Học từ vựng mới', icon: <BookOpen className="w-5 h-5" />,
+                  title: 'Nạp thêm từ vựng', icon: <BookOpen className="w-4 h-4" />,
                   progress: Math.min(100, Math.round(((stats?.wordsLearned || 0) / Math.max(1, stats?.totalVocab || 10)) * 100)),
-                  color: 'var(--color-primary)'
+                  color: '#1cb0f6'
                 },
                 {
-                  title: `Chuỗi học ${stats?.streak || 0} ngày`, icon: <Flame className="w-5 h-5" />,
+                  title: `Giữ lửa streak ngày`, icon: <Flame className="w-4 h-4 fill-current" />,
                   progress: Math.min(100, (stats?.streak || 0) > 0 ? 100 : 0),
-                  color: 'var(--color-warning)'
+                  color: '#ff9600'
                 },
               ].map((m, idx) => (
-                <div key={idx} className="bg-[var(--color-surface)] border border-[var(--color-surface-border)] p-4 rounded-2xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-xl" style={{ backgroundColor: `${m.color}15`, color: m.color }}>{m.icon}</div>
-                      <span className="text-sm font-semibold text-[var(--color-text)]">{m.title}</span>
+                <div key={idx} className="bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] p-3.5 rounded-2xl relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 rounded-xl text-white shadow-sm" style={{ backgroundColor: m.color }}>{m.icon}</div>
+                      <span className="text-xs font-bold text-[var(--color-text)]">{m.title}</span>
                     </div>
-                    <span className="text-xs font-bold" style={{ color: m.progress === 100 ? m.color : 'var(--color-text-muted)' }}>
-                      {m.progress === 100 ? 'HOÀN THÀNH' : `${m.progress}%`}
+                    <span className="text-[10px] font-black tracking-wider" style={{ color: m.progress === 100 ? '#58cc02' : 'var(--color-text-muted)' }}>
+                      {m.progress === 100 ? 'ĐẠT' : `${m.progress}%`}
                     </span>
                   </div>
-                  <div className="w-full bg-[var(--color-surface-border)] h-2 rounded-full overflow-hidden">
+                  <div className="w-full bg-[var(--color-surface-border)] h-2 rounded-full overflow-hidden border border-transparent">
                     <motion.div
                       className="h-full rounded-full"
                       style={{ backgroundColor: m.color }}
@@ -423,25 +432,25 @@ const Dashboard = () => {
       </div>
 
       {/* ── Leaderboard ───────────────────────────────────────────────────── */}
-      <section id="leaderboard-section" className="glass-panel p-6 md:p-8 mt-2">
+      <section id="leaderboard-section" className="card-3d p-6 bg-[var(--color-surface)] mt-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-yellow-500" /> Bảng Xếp Hạng
+          <h2 className="text-lg font-black uppercase tracking-wider flex items-center gap-2 text-[var(--color-text)]">
+            <Trophy className="w-5 h-5 text-yellow-500 fill-current" /> Đấu trường học viên
           </h2>
-          <span className="px-3 py-1.5 bg-[var(--color-surface-border)] text-[var(--color-text-muted)] rounded-lg text-xs font-bold">Top 10 (XP Cao Nhất)</span>
+          <span className="px-3.5 py-1.5 bg-[var(--color-bg)] text-[var(--color-text-muted)] rounded-xl text-xs font-bold border border-[var(--color-surface-border)] uppercase tracking-wider">Top 10 xếp hạng</span>
         </div>
 
         {loadingLb ? (
           <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-2xl" />)}
+            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-2xl" />)}
           </div>
         ) : leaderboard.length === 0 ? (
-          <div className="bg-[var(--color-surface-border)]/30 rounded-2xl p-10 text-center">
-            <p className="text-[var(--color-text-muted)] font-medium">Chưa có dữ liệu người dùng nào.</p>
+          <div className="bg-[var(--color-bg)] rounded-2xl p-10 text-center border-2 border-dashed border-[var(--color-surface-border)]">
+            <p className="text-[var(--color-text-muted)] font-bold">Chưa có bảng đấu nào diễn ra.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {leaderboard.map((u, i) => (
+            {leaderboard.slice(0, 10).map((u, i) => (
               <LeaderboardRow key={u.id} user={u} rank={i + 1} currentId={authUser?.id} />
             ))}
           </div>
@@ -449,33 +458,36 @@ const Dashboard = () => {
       </section>
 
       {/* ── Achievements preview ───────────────────────────────────────────── */}
-      <section className="glass-panel p-6 md:p-8 mt-2">
-        <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 mb-6">
-          <Award className="w-5 h-5 text-[var(--color-accent)]" /> Thành Tựu
+      <section className="card-3d p-6 bg-[var(--color-surface)] mt-2">
+        <h2 className="text-lg font-black uppercase tracking-wider flex items-center gap-2 mb-6 text-[var(--color-text)]">
+          <Award className="w-5 h-5 text-[var(--color-primary)]" /> Phòng trưng bày thành tựu
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {[
-            { name: 'Khởi Động', icon: '🚀', desc: 'Đăng ký tài khoản', earned: true },
-            { name: 'Chiến Binh Quiz', icon: '⚔️', desc: 'Làm 1 bài kiểm tra', earned: (stats?.stats?.totalQuizzesTaken || 0) >= 1 },
+            { name: 'Khởi Động', icon: '🚀', desc: 'Gia nhập lớp học', earned: true },
+            { name: 'Chiến Binh Quiz', icon: '⚔️', desc: 'Vượt qua 1 bài kiểm tra', earned: (stats?.stats?.totalQuizzesTaken || 0) >= 1 },
             { name: 'Từ Điển Sống', icon: '📚', desc: 'Học 10 từ vựng', earned: (stats?.wordsLearned || 0) >= 10 },
-            { name: 'Chăm Chỉ', icon: '🔥', desc: 'Chuỗi 3 ngày', earned: (stats?.streak || 0) >= 3 },
-            { name: 'AI Partner', icon: '🤖', desc: 'Dùng AI sinh dữ liệu', earned: false },
+            { name: 'Chăm Chỉ', icon: '🔥', desc: 'Chuỗi học 3 ngày', earned: (stats?.streak || 0) >= 3 },
+            { name: 'AI Partner', icon: '🤖', desc: 'Gọi AI nạp từ vựng', earned: false },
           ].map((a, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.08 }}
-              className={`p-5 rounded-2xl border flex flex-col items-center justify-center text-center transition-all duration-300 ${
-                a.earned
-                  ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10 shadow-sm'
-                  : 'border-[var(--color-surface-border)] bg-[var(--color-surface)] opacity-60 hover:opacity-100 grayscale hover:grayscale-0'
-              }`}
+              className={`p-5 rounded-2xl border-2 flex flex-col items-center justify-center text-center transition-all duration-300 relative select-none ${a.earned
+                  ? 'border-yellow-400 bg-yellow-50/10 dark:bg-yellow-950/10 shadow-sm'
+                  : 'border-[var(--color-surface-border)] bg-[var(--color-surface)] opacity-55 grayscale'
+                }`}
             >
-              <div className="text-4xl mb-3 filter drop-shadow-sm">{a.icon}</div>
-              <p className="text-sm font-bold text-[var(--color-text)] leading-tight">{a.name}</p>
-              <p className="text-[11px] text-[var(--color-text-muted)] font-medium mt-1 mb-2">{a.desc}</p>
-              {a.earned && <span className="text-[10px] font-bold text-[var(--color-accent)] uppercase tracking-wider bg-[var(--color-accent)]/20 px-2 py-0.5 rounded-full mt-auto">Hoàn Thành</span>}
+              <div className="text-4xl mb-3 filter drop-shadow-md transition-transform duration-300 hover:scale-110">{a.icon}</div>
+              <p className="text-xs font-black text-[var(--color-text)] leading-tight uppercase tracking-wide">{a.name}</p>
+              <p className="text-[10px] text-[var(--color-text-muted)] font-bold mt-1 mb-2">{a.desc}</p>
+              {a.earned && (
+                <span className="text-[8px] font-black text-yellow-600 bg-yellow-100 dark:bg-yellow-900/40 px-2 py-0.5 rounded-full mt-auto border border-yellow-200 dark:border-yellow-800 uppercase tracking-widest">
+                  Đã Đạt
+                </span>
+              )}
             </motion.div>
           ))}
         </div>

@@ -11,6 +11,7 @@ import { seedDatabase, generateAIWords } from '../services/seedService';
 import { pageVariants } from '../animations/variants';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 
 /* ── Speak ──────────────────────────────────────────────────────────────── */
 const speak = (text, rate = 0.85) => {
@@ -23,25 +24,42 @@ const speak = (text, rate = 0.85) => {
 
 /* ── Theme config ─────────────────────────────────────────────────────── */
 const THEME_CONFIG = {
-  AI:       { color: '#a855f7', bg: '#a855f722', emoji: '🤖' },
-  Cyber:    { color: '#00f0ff', bg: '#00f0ff22', emoji: '🌐' },
-  Tech:     { color: '#3b82f6', bg: '#3b82f622', emoji: '⚙️' },
-  Security: { color: '#ef4444', bg: '#ef444422', emoji: '🛡️' },
-  Network:  { color: '#22c55e', bg: '#22c55e22', emoji: '📡' },
-  'Sci-Fi': { color: '#f59e0b', bg: '#f59e0b22', emoji: '🚀' },
-  Data:     { color: '#06b6d4', bg: '#06b6d422', emoji: '💾' },
-  Hack:     { color: '#f97316', bg: '#f9731622', emoji: '💻' },
-  General:  { color: '#8b5cf6', bg: '#8b5cf622', emoji: '📚' },
+  AI: { color: '#a855f7', bg: '#a855f715', emoji: '🤖', level: 'Advanced' },
+  Cyber: { color: '#0ea5e9', bg: '#0ea5e915', emoji: '🌐', level: 'Advanced' },
+  Tech: { color: '#3b82f6', bg: '#3b82f615', emoji: '⚙️', level: 'Beginner' },
+  Security: { color: '#ef4444', bg: '#ef444415', emoji: '🛡️', level: 'Intermediate' },
+  Network: { color: '#22c55e', bg: '#22c55e15', emoji: '📡', level: 'Intermediate' },
+  'Sci-Fi': { color: '#f59e0b', bg: '#f59e0b15', emoji: '🚀', level: 'Intermediate' },
+  Data: { color: '#06b6d4', bg: '#06b6d415', emoji: '💾', level: 'Intermediate' },
+  Hack: { color: '#f97316', bg: '#f9731615', emoji: '💻', level: 'Advanced' },
+  General: { color: '#8b5cf6', bg: '#8b5cf615', emoji: '📚', level: 'Beginner' },
 };
+
 const getThemeConfig = (t) => {
-  if (t === '__favorites__') return { color: '#ef4444', bg: '#ef444422', emoji: '❤️' };
-  return THEME_CONFIG[t] || { color: '#6b7280', bg: '#6b728022', emoji: '📝' };
+  if (t === '__favorites__') return { color: '#ef4444', bg: '#ef444415', emoji: '❤️', level: 'Special' };
+  return THEME_CONFIG[t] || { color: '#6b7280', bg: '#6b728015', emoji: '📝', level: 'Beginner' };
+};
+
+const getLevelBadgeStyle = (lvl) => {
+  switch (lvl) {
+    case 'Advanced':
+      return 'bg-red-50 text-red-600 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900';
+    case 'Intermediate':
+      return 'bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-900';
+    case 'Special':
+      return 'bg-pink-50 text-pink-600 border-pink-200 dark:bg-pink-950/30 dark:text-pink-400 dark:border-pink-900';
+    default:
+      return 'bg-green-50 text-green-600 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-900';
+  }
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
    STUDY SESSION — học theo chủ đề với chế độ flashcard + quiz nhỏ
+   Đã thêm favorites & onToggleFav để đồng bộ yêu thích trực tiếp
+   Đã cập nhật giao diện Flashcard lật 3D thực tế
+   Đã sử dụng các nút bấm 3D
 ═══════════════════════════════════════════════════════════════════════════ */
-const StudySession = ({ theme, themeColor, onExit }) => {
+const StudySession = ({ theme, themeColor, onExit, favorites, onToggleFav }) => {
   const [words, setWords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -54,7 +72,6 @@ const StudySession = ({ theme, themeColor, onExit }) => {
   const [score, setScore] = useState(0);
   const [quizDone, setQuizDone] = useState(false);
   const [quizIdx, setQuizIdx] = useState(0);
-  const [showMeaning, setShowMeaning] = useState(false);
 
   /* Load all words for this theme */
   useEffect(() => {
@@ -154,203 +171,195 @@ const StudySession = ({ theme, themeColor, onExit }) => {
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-      <Loader2 className="w-10 h-10 animate-spin" style={{ color: themeColor }} />
-      <p className="font-mono text-sm" style={{ color: themeColor }}>Đang tải từ vựng {theme}...</p>
+      <Loader2 className="w-10 h-10 animate-spin text-[var(--color-primary)]" />
+      <p className="font-bold text-sm text-[var(--color-primary)]">Đang tải học phần chủ đề {theme}...</p>
     </div>
   );
 
   if (words.length === 0) return (
-    <div className="text-center py-20">
-      <p className="text-gray-500 font-mono">Chủ đề này chưa có từ vựng nào.</p>
-      <button onClick={onExit} className="mt-6 btn-secondary flex items-center gap-2 mx-auto">
+    <div className="text-center py-20 bg-[var(--color-surface)] border-2 border-[var(--color-surface-border)] rounded-2xl p-8 max-w-md mx-auto">
+      <p className="text-[var(--color-text-muted)] font-bold">Chủ đề này chưa có từ vựng nào.</p>
+      <button onClick={onExit} className="mt-6 btn-3d-secondary flex items-center gap-2 mx-auto">
         <ArrowLeft className="w-4 h-4" /> Quay lại
       </button>
     </div>
   );
 
   const currentWord = words[currentIdx];
+  const isFav = favorites?.includes(currentWord?.id);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="max-w-2xl mx-auto space-y-5"
+      className="max-w-2xl mx-auto space-y-6"
     >
       {/* ── Session header ── */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={onExit}
-          className="p-2 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:border-white/30 transition-all"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xl">{cfg.emoji}</span>
-            <h2 className="text-xl font-black font-mono uppercase tracking-widest" style={{ color: themeColor }}>
-              Chủ Đề: {theme}
-            </h2>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full rounded-full"
-                style={{ background: themeColor }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5 }}
-              />
+      <div className="flex items-center justify-between gap-4 bg-[var(--color-surface)] p-4 rounded-2xl border-2 border-[var(--color-surface-border)]">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onExit}
+            className="p-2.5 rounded-xl border-2 border-[var(--color-surface-border)] hover:bg-[var(--color-bg)] transition-all cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{cfg.emoji}</span>
+              <h2 className="text-base font-black uppercase tracking-wider text-[var(--color-text)]">
+                Chủ đề: {theme}
+              </h2>
             </div>
-            <span className="text-xs font-mono text-gray-400 shrink-0">
-              {learned.size}/{words.length} đã học
-            </span>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 border rounded-md tracking-wider bg-[var(--color-bg)] border-[var(--color-surface-border)] text-[var(--color-text-muted)]">
+                {words.length} từ
+              </span>
+              <div className="w-20 h-1.5 bg-[var(--color-surface-border)] rounded-full overflow-hidden">
+                <div className="h-full bg-[var(--color-accent)] rounded-full" style={{ width: `${progress}%` }} />
+              </div>
+              <span className="text-[10px] font-bold text-[var(--color-text-muted)]">{learned.size}/{words.length} đã học</span>
+            </div>
           </div>
         </div>
+
         {/* Mode tabs */}
-        <div className="flex gap-1 bg-black/50 border border-white/10 p-1 rounded-xl">
+        <div className="flex gap-1 bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] p-1 rounded-xl">
           <button
             onClick={() => setMode('study')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all ${
-              mode === 'study' ? 'text-black font-bold' : 'text-gray-500 hover:text-white'
-            }`}
-            style={mode === 'study' ? { background: themeColor } : {}}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${mode === 'study' ? 'bg-[var(--color-primary)] text-white shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+              }`}
           >
-            <span className="flex items-center gap-1"><Layers className="w-3.5 h-3.5" /> Học</span>
+            <span className="flex items-center gap-1"><Layers className="w-3.5 h-3.5" /> Học thẻ</span>
           </button>
           <button
             onClick={startQuiz}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all ${
-              mode === 'quiz' ? 'text-black font-bold' : 'text-gray-500 hover:text-white'
-            }`}
-            style={mode === 'quiz' ? { background: themeColor } : {}}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${mode === 'quiz' ? 'bg-[var(--color-primary)] text-white shadow-sm' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+              }`}
           >
-            <span className="flex items-center gap-1"><Target className="w-3.5 h-3.5" /> Kiểm tra</span>
+            <span className="flex items-center gap-1"><Target className="w-3.5 h-3.5" /> Thử thách</span>
           </button>
         </div>
       </div>
 
-      {/* ═══ STUDY MODE ══════════════════════════════════════════════════ */}
+      {/* ──═ STUDY MODE ═── */}
       {mode === 'study' && (
-        <div className="space-y-4">
-          {/* Flashcard */}
-          <div
-            className="w-full rounded-2xl border-2 overflow-hidden relative cursor-pointer select-none"
-            style={{
-              minHeight: '320px',
-              borderColor: themeColor + '50',
-              background: 'rgba(0,0,0,0.85)',
-              boxShadow: `0 0 40px ${themeColor}18`,
-            }}
-            onClick={() => setIsFlipped(!isFlipped)}
-          >
-            {/* Bg image */}
-            {currentWord.imageUrl && (
-              <div
-                className="absolute inset-0 bg-cover bg-center opacity-10"
-                style={{ backgroundImage: `url(${currentWord.imageUrl})`, filter: 'grayscale(50%) sepia(80%) hue-rotate(160deg)' }}
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/30" />
+        <div className="space-y-6">
+          {/* 3D Flashcard container with fixed height to avoid collapsing */}
+          <div className="w-full h-80 perspective-1000 select-none cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
+            <div className={`relative w-full h-full transition-transform duration-500 preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
 
-            <AnimatePresence mode="wait">
-              {!isFlipped ? (
-                /* Front */
-                <motion.div
-                  key="front"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="relative z-10 flex flex-col items-center justify-center p-8 min-h-[320px] text-center"
-                >
+              {/* Front Side */}
+              <div className="absolute inset-0 backface-hidden card-3d p-8 flex flex-col items-center justify-center text-center bg-[var(--color-surface)] border-2 hover:border-sky-300 dark:hover:border-sky-700">
+                {currentWord.imageUrl && (
+                  <div
+                    className="absolute inset-0 bg-cover bg-center opacity-[0.04] rounded-2xl pointer-events-none"
+                    style={{ backgroundImage: `url(${currentWord.imageUrl})` }}
+                  />
+                )}
+
+                {/* Heart & Status headers */}
+                <div className="absolute top-4 left-4 right-4 flex justify-between items-center pointer-events-auto">
                   <span
-                    className="text-[10px] font-mono font-bold px-3 py-1 rounded-full uppercase tracking-widest mb-4"
-                    style={{ background: cfg.bg, color: themeColor, border: `1px solid ${themeColor}40` }}
+                    className="text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest border"
+                    style={{ background: cfg.bg, color: themeColor, borderColor: themeColor + '30' }}
                   >
                     {currentWord.type}
                   </span>
-                  <h2 className="text-5xl font-black text-white mb-3 tracking-wider">{currentWord.word}</h2>
-                  <p className="text-xl font-mono mb-5" style={{ color: themeColor }}>{currentWord.ipa}</p>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); speak(currentWord.word); }}
-                    className="p-3 rounded-full border transition-all hover:scale-110"
-                    style={{ borderColor: themeColor + '40', color: themeColor, background: themeColor + '10' }}
-                  >
-                    <Volume2 className="w-5 h-5" />
-                  </button>
-                  <p className="absolute bottom-4 text-[10px] text-gray-600 font-mono uppercase tracking-widest">
-                    Nhấn để xem nghĩa →
-                  </p>
 
-                  {/* Learned badge */}
-                  {learned.has(currentWord.id) && (
-                    <div className="absolute top-4 right-4 flex items-center gap-1 text-green-400 bg-green-400/10 border border-green-400/30 px-2 py-1 rounded-lg text-xs font-mono">
-                      <CheckCircle className="w-3.5 h-3.5" /> Đã học
-                    </div>
-                  )}
-                </motion.div>
-              ) : (
-                /* Back */
-                <motion.div
-                  key="back"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="relative z-10 flex flex-col items-center justify-center p-8 min-h-[320px] text-center gap-4"
+                  <div className="flex items-center gap-2">
+                    {learned.has(currentWord.id) && (
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 border border-green-200 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900 px-2 py-0.5 rounded-lg">
+                        Đã học
+                      </span>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleFav(currentWord.id);
+                      }}
+                      className="p-1.5 rounded-lg border-2 border-[var(--color-surface-border)] hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                    >
+                      <Heart className={`w-4 h-4 ${isFav ? 'text-red-500 fill-red-500' : 'text-[var(--color-text-muted)]'}`} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Core word info */}
+                <h2 className="text-4xl md:text-5xl font-black text-[var(--color-text)] mb-2 tracking-wide mt-4">{currentWord.word}</h2>
+                <p className="text-lg font-bold font-mono text-[var(--color-primary)] mb-5">{currentWord.ipa}</p>
+
+                <button
+                  onClick={(e) => { e.stopPropagation(); speak(currentWord.word); }}
+                  className="p-3 rounded-xl border-2 border-[var(--color-surface-border)] text-[var(--color-primary)] bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/30 transition-all pointer-events-auto active:scale-95"
                 >
-                  <p className="text-3xl font-bold text-white leading-relaxed">{currentWord.meaning}</p>
-                  <div className="w-16 h-px" style={{ background: themeColor }} />
-                  <p className="text-gray-400 italic text-sm">"{currentWord.example}"</p>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); speak(currentWord.example, 0.8); }}
-                    className="flex items-center gap-2 text-xs font-mono border px-3 py-1.5 rounded-full hover:opacity-80 transition-opacity"
-                    style={{ color: themeColor, borderColor: themeColor + '40' }}
-                  >
-                    <Volume2 className="w-3.5 h-3.5" /> Nghe ví dụ
-                  </button>
-                  <p className="absolute bottom-4 text-[10px] text-gray-600 font-mono uppercase tracking-widest">
-                    ← Nhấn để quay lại
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <Volume2 className="w-5 h-5" />
+                </button>
+
+                <p className="absolute bottom-4 text-[9px] text-[var(--color-text-muted)] font-black uppercase tracking-wider">
+                  Chạm vào thẻ để lật xem nghĩa
+                </p>
+              </div>
+
+              {/* Back Side */}
+              <div className="absolute inset-0 backface-hidden rotate-y-180 card-3d p-8 flex flex-col items-center justify-center text-center bg-[var(--color-surface)] border-2 hover:border-sky-300 dark:hover:border-sky-700">
+                <span className="absolute top-4 left-4 text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest bg-orange-50 border border-orange-200 text-orange-600 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900">
+                  Định nghĩa
+                </span>
+
+                <p className="text-2xl md:text-3xl font-black text-[var(--color-text)] leading-relaxed mb-4">{currentWord.meaning}</p>
+                <div className="w-12 h-1 bg-[var(--color-surface-border)] rounded-full mb-4" />
+                <p className="text-[var(--color-text-muted)] italic text-sm font-bold max-w-md">"{currentWord.example}"</p>
+
+                <button
+                  onClick={(e) => { e.stopPropagation(); speak(currentWord.example, 0.8); }}
+                  className="mt-4 flex items-center gap-1.5 text-xs font-bold border-2 border-[var(--color-surface-border)] px-3 py-1.5 rounded-xl hover:bg-[var(--color-bg)] transition-colors pointer-events-auto"
+                >
+                  <Volume2 className="w-4 h-4 text-[var(--color-primary)]" />
+                  <span>Nghe ví dụ</span>
+                </button>
+
+                <p className="absolute bottom-4 text-[9px] text-[var(--color-text-muted)] font-black uppercase tracking-wider">
+                  Chạm để quay lại mặt trước
+                </p>
+              </div>
+
+            </div>
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 bg-[var(--color-surface)] p-3 rounded-2xl border-2 border-[var(--color-surface-border)]">
             <button
               onClick={goPrev}
               disabled={currentIdx === 0}
-              className="p-3 rounded-xl border border-white/10 text-gray-400 disabled:opacity-30 hover:border-white/30 transition-all"
+              className="p-3 rounded-xl border-2 border-[var(--color-surface-border)] text-[var(--color-text-muted)] disabled:opacity-40 hover:bg-[var(--color-bg)] transition-all cursor-pointer active:scale-95 shrink-0"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
 
-            <div className="flex-1 flex flex-col items-center gap-2">
+            <div className="flex-1 flex flex-col items-center gap-2 overflow-hidden">
               {/* Dot progress */}
-              <div className="flex gap-1 flex-wrap justify-center max-w-xs">
+              <div className="flex gap-1.5 flex-wrap justify-center max-w-xs max-h-12 overflow-y-auto px-1 py-1">
                 {words.map((w, i) => (
                   <div
                     key={w.id}
                     onClick={() => { setIsFlipped(false); setCurrentIdx(i); }}
                     className="w-2.5 h-2.5 rounded-full cursor-pointer transition-all"
                     style={{
-                      background: learned.has(w.id) ? '#22c55e'
-                        : i === currentIdx ? themeColor : 'rgba(255,255,255,0.15)',
-                      transform: i === currentIdx ? 'scale(1.4)' : 'scale(1)',
-                      boxShadow: i === currentIdx ? `0 0 6px ${themeColor}` : 'none',
+                      background: learned.has(w.id) ? '#58cc02'
+                        : i === currentIdx ? 'var(--color-primary)' : 'var(--color-surface-border)',
+                      transform: i === currentIdx ? 'scale(1.3)' : 'scale(1)',
                     }}
                   />
                 ))}
               </div>
-              <p className="text-xs text-gray-500 font-mono">{currentIdx + 1} / {words.length}</p>
+              <p className="text-[10px] text-[var(--color-text-muted)] font-bold uppercase tracking-wider">Từ vựng {currentIdx + 1} trên tổng {words.length}</p>
             </div>
 
             <button
               onClick={goNext}
               disabled={currentIdx === words.length - 1}
-              className="p-3 rounded-xl border border-white/10 text-gray-400 disabled:opacity-30 hover:border-white/30 transition-all"
+              className="p-3 rounded-xl border-2 border-[var(--color-surface-border)] text-[var(--color-text-muted)] disabled:opacity-40 hover:bg-[var(--color-bg)] transition-all cursor-pointer active:scale-95 shrink-0"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -360,45 +369,43 @@ const StudySession = ({ theme, themeColor, onExit }) => {
           <div className="flex gap-3">
             <button
               onClick={markLearned}
-              className="flex-1 py-3 rounded-xl font-mono text-sm font-bold border-2 transition-all flex items-center justify-center gap-2"
+              className={`flex-1 btn-3d py-3 rounded-2xl text-xs font-black tracking-wider uppercase border-2 flex items-center justify-center gap-2 ${learned.has(currentWord?.id)
+                  ? 'bg-green-50 text-green-600 border-green-200 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900 border-b-[4px]'
+                  : 'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-surface-border)]'
+                }`}
               style={{
-                borderColor: learned.has(currentWord?.id) ? '#22c55e' : themeColor,
-                background: learned.has(currentWord?.id) ? '#22c55e15' : themeColor + '15',
-                color: learned.has(currentWord?.id) ? '#22c55e' : themeColor,
+                borderBottomColor: learned.has(currentWord?.id) ? '#46a302' : undefined
               }}
             >
               <CheckCircle className="w-4 h-4" />
-              {learned.has(currentWord?.id) ? 'Đã đánh dấu học' : 'Đánh dấu đã học'}
+              {learned.has(currentWord?.id) ? 'Đã học xong thẻ' : 'Đánh dấu đã học'}
             </button>
             {learned.size === words.length && (
               <button
                 onClick={startQuiz}
-                className="flex-1 py-3 rounded-xl font-mono text-sm font-bold border-2 text-black transition-all flex items-center justify-center gap-2 animate-pulse"
-                style={{ background: themeColor, borderColor: themeColor }}
+                className="flex-1 btn-3d-success py-3 rounded-2xl text-xs font-black tracking-wider uppercase animate-pulse"
               >
-                <Target className="w-4 h-4" /> Kiểm tra ngay!
+                <Target className="w-4 h-4" /> Bắt đầu kiểm tra!
               </button>
             )}
           </div>
 
-          {/* Word list mini */}
-          <div className="glass-panel p-4 space-y-2">
-            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mb-3">
-              Tất cả từ trong chủ đề ({words.length})
+          {/* Word list mini inside Study Session */}
+          <div className="card-3d p-4 bg-[var(--color-surface)]">
+            <p className="text-[10px] font-black text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
+              Mục lục từ vựng ({words.length})
             </p>
-            <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto custom-scrollbar pr-1">
+            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
               {words.map((w, i) => (
                 <button
                   key={w.id}
                   onClick={() => { setIsFlipped(false); setCurrentIdx(i); }}
-                  className={`text-left px-3 py-2 rounded-lg border text-xs font-mono transition-all flex items-center gap-2 ${
-                    i === currentIdx
-                      ? 'border-transparent text-black font-bold'
-                      : 'border-white/8 text-gray-400 hover:border-white/20 hover:text-white'
-                  }`}
-                  style={i === currentIdx ? { background: themeColor } : {}}
+                  className={`text-left px-3 py-2 rounded-xl border text-xs font-bold transition-all flex items-center gap-2 ${i === currentIdx
+                      ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
+                      : 'bg-[var(--color-bg)] border-[var(--color-surface-border)] text-[var(--color-text-muted)] hover:border-gray-300 dark:hover:border-slate-700'
+                    }`}
                 >
-                  {learned.has(w.id) && <CheckCircle className="w-3 h-3 text-green-400 shrink-0" />}
+                  {learned.has(w.id) && <CheckCircle className="w-3.5 h-3.5 text-green-500 shrink-0" />}
                   <span className="truncate">{w.word}</span>
                 </button>
               ))}
@@ -407,7 +414,7 @@ const StudySession = ({ theme, themeColor, onExit }) => {
         </div>
       )}
 
-      {/* ═══ QUIZ MODE ══════════════════════════════════════════════════ */}
+      {/* ──═ QUIZ CHALLENGE MODE ═── */}
       {mode === 'quiz' && (
         <div>
           {quizDone ? (
@@ -415,17 +422,18 @@ const StudySession = ({ theme, themeColor, onExit }) => {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="glass-panel p-8 text-center space-y-5"
+              className="card-3d p-8 text-center space-y-6"
             >
-              <div className="text-5xl mb-2">
-                {score / quizQuestions.length >= 0.8 ? '🏆' : score / quizQuestions.length >= 0.5 ? '⚡' : '💡'}
+              <div className="text-5xl select-none">
+                {score / quizQuestions.length >= 0.8 ? '🥇' : score / quizQuestions.length >= 0.5 ? '⚡' : '💡'}
               </div>
-              <h3 className="text-2xl font-black font-mono uppercase" style={{ color: themeColor }}>
-                Kết Quả Kiểm Tra
+              <h3 className="text-xl font-black uppercase tracking-wider text-[var(--color-primary)]">
+                Hoàn Thành Thử Thách
               </h3>
-              <div className="relative w-28 h-28 mx-auto">
+
+              <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="40" fill="transparent" stroke="#1a1a1a" strokeWidth="10" />
+                  <circle cx="50" cy="50" r="40" fill="transparent" stroke="var(--color-surface-border)" strokeWidth="10" />
                   <motion.circle
                     cx="50" cy="50" r="40" fill="transparent"
                     stroke={themeColor} strokeWidth="10" strokeLinecap="round"
@@ -435,17 +443,18 @@ const StudySession = ({ theme, themeColor, onExit }) => {
                     transition={{ duration: 1.2, ease: 'easeOut' }}
                   />
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <p className="text-3xl font-black font-mono text-white">{Math.round(score / quizQuestions.length * 100)}%</p>
-                  <p className="text-[10px] text-gray-500 font-mono">{score}/{quizQuestions.length}</p>
+                <div className="absolute text-center flex flex-col items-center">
+                  <p className="text-2xl font-black text-[var(--color-text)]">{Math.round(score / quizQuestions.length * 100)}%</p>
+                  <p className="text-[10px] text-[var(--color-text-muted)] font-bold">{score}/{quizQuestions.length} đúng</p>
                 </div>
               </div>
+
               <div className="flex gap-3 justify-center">
-                <button onClick={startQuiz} className="btn-secondary flex items-center gap-2 font-mono text-sm">
+                <button onClick={startQuiz} className="btn-3d-secondary flex items-center gap-2 text-xs">
                   <RotateCcw className="w-4 h-4" /> Làm lại
                 </button>
-                <button onClick={() => setMode('study')} className="btn-primary flex items-center gap-2 font-mono text-sm px-5">
-                  <Layers className="w-4 h-4" /> Học tiếp
+                <button onClick={() => setMode('study')} className="btn-3d-primary flex items-center gap-2 text-xs py-2.5">
+                  <Layers className="w-4 h-4" /> Tiếp tục học
                 </button>
               </div>
             </motion.div>
@@ -455,32 +464,31 @@ const StudySession = ({ theme, themeColor, onExit }) => {
               key={quizIdx}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="glass-panel p-6 space-y-5"
+              className="card-3d p-6 space-y-6"
             >
               {/* Progress */}
-              <div className="flex justify-between items-center text-xs font-mono text-gray-500">
-                <span>Câu {quizIdx + 1} / {quizQuestions.length}</span>
-                <span className="flex items-center gap-1">
-                  <Zap className="w-3.5 h-3.5 text-yellow-400" />
+              <div className="flex justify-between items-center text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                <span>Câu hỏi {quizIdx + 1} / {quizQuestions.length}</span>
+                <span className="flex items-center gap-1.5 text-orange-500 font-extrabold">
+                  <Zap className="w-4 h-4 fill-current text-yellow-500" />
                   {score} đúng
                 </span>
               </div>
-              <div className="w-full h-1 bg-white/10 rounded-full">
+              <div className="w-full h-2.5 bg-[var(--color-surface-border)] rounded-full overflow-hidden border">
                 <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${(quizIdx / quizQuestions.length) * 100}%`, background: themeColor }}
+                  className="h-full rounded-full transition-all duration-500 bg-[var(--color-accent)]"
+                  style={{ width: `${(quizIdx / quizQuestions.length) * 100}%` }}
                 />
               </div>
 
               {/* Question */}
-              <div className="text-center py-4">
-                <p className="text-xs text-gray-500 font-mono uppercase tracking-widest mb-2">Chọn nghĩa đúng của từ</p>
-                <h3 className="text-4xl font-black text-white">{quizQuestion.word}</h3>
-                <p className="font-mono mt-1" style={{ color: themeColor }}>{quizQuestion.ipa}</p>
+              <div className="text-center py-4 bg-[var(--color-bg)] rounded-2xl border-2 border-[var(--color-surface-border)]">
+                <p className="text-[9px] text-[var(--color-text-muted)] font-black uppercase tracking-wider mb-2">Chọn nghĩa tiếng Việt chính xác</p>
+                <h3 className="text-3xl font-black text-[var(--color-text)]">{quizQuestion.word}</h3>
+                <p className="font-mono mt-1 text-[var(--color-primary)] font-bold text-sm">{quizQuestion.ipa}</p>
                 <button
                   onClick={() => speak(quizQuestion.word)}
-                  className="mt-2 p-2 rounded-full border transition-all hover:scale-110 inline-flex"
-                  style={{ borderColor: themeColor + '40', color: themeColor }}
+                  className="mt-3 p-2 rounded-xl border-2 border-[var(--color-surface-border)] hover:bg-[var(--color-surface)] text-[var(--color-primary)] active:scale-95"
                 >
                   <Volume2 className="w-4 h-4" />
                 </button>
@@ -489,25 +497,35 @@ const StudySession = ({ theme, themeColor, onExit }) => {
               {/* Options */}
               <div className="grid grid-cols-1 gap-3">
                 {quizQuestion.options.map((opt, idx) => {
-                  let style = 'border-white/10 text-gray-300 hover:border-white/30 hover:bg-white/5';
+                  let btnStyle = 'border-[var(--color-surface-border)] bg-[var(--color-surface)] text-[var(--color-text)] hover:bg-[var(--color-bg)]';
+                  let borderBottomColor = undefined;
+
                   if (quizAnswered) {
-                    if (idx === quizQuestion.answerIdx) style = 'border-green-500 bg-green-500/15 text-green-300';
-                    else style = 'border-white/5 text-gray-600 opacity-60';
+                    if (idx === quizQuestion.answerIdx) {
+                      btnStyle = 'border-green-300 bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900 border-b-[4px]';
+                      borderBottomColor = '#46a302';
+                    } else if (idx === quizQuestion.answerIdx) {
+                      // no other style
+                    } else {
+                      btnStyle = 'border-[var(--color-surface-border)] text-[var(--color-text-muted)] opacity-50 cursor-not-allowed';
+                    }
                   }
+
                   return (
                     <motion.button
                       key={idx}
-                      whileHover={!quizAnswered ? { scale: 1.01 } : {}}
+                      whileHover={!quizAnswered ? { scale: 1.005 } : {}}
                       onClick={() => answerQuiz(idx)}
                       disabled={quizAnswered}
-                      className={`w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-mono transition-all flex items-center gap-3 ${style}`}
+                      className={`w-full text-left px-4 py-3 rounded-2xl border-2 text-sm font-bold transition-all flex items-center gap-3 active:translate-y-[2px] cursor-pointer ${btnStyle}`}
+                      style={{
+                        borderBottomColor
+                      }}
                     >
                       <span
                         className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black border"
                         style={{
-                          background: idx === quizQuestion.answerIdx && quizAnswered ? '#22c55e30' : 'rgba(255,255,255,0.05)',
-                          borderColor: idx === quizQuestion.answerIdx && quizAnswered ? '#22c55e' : 'rgba(255,255,255,0.1)',
-                          color: idx === quizQuestion.answerIdx && quizAnswered ? '#22c55e' : undefined,
+                          background: 'rgba(0,0,0,0.02)',
                         }}
                       >
                         {String.fromCharCode(65 + idx)}
@@ -523,17 +541,16 @@ const StudySession = ({ theme, themeColor, onExit }) => {
                 <motion.div
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex justify-between items-center pt-1"
+                  className="flex justify-between items-center pt-2 border-t border-[var(--color-surface-border)]"
                 >
-                  <p className={`text-sm font-mono font-bold ${quizCorrect ? 'text-green-400' : 'text-red-400'}`}>
-                    {quizCorrect ? '✓ Chính xác! +10 điểm' : '✗ Sai rồi!'}
+                  <p className={`text-sm font-bold ${quizCorrect ? 'text-green-600' : 'text-red-500'}`}>
+                    {quizCorrect ? '✓ Hoàn hảo! +10 điểm' : '✗ Hãy ghi nhớ nhé!'}
                   </p>
                   <button
                     onClick={nextQuiz}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-sm text-black font-bold transition-all hover:opacity-90"
-                    style={{ background: themeColor }}
+                    className="btn-3d-primary flex items-center gap-1.5 text-xs py-2 px-4"
                   >
-                    {quizIdx + 1 < quizQuestions.length ? 'Tiếp' : 'Xem kết quả'}
+                    {quizIdx + 1 < quizQuestions.length ? 'Tiếp tục' : 'Xem điểm số'}
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </motion.div>
@@ -543,20 +560,20 @@ const StudySession = ({ theme, themeColor, onExit }) => {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="glass-panel p-8 text-center space-y-4"
+              className="card-3d p-8 text-center space-y-4"
             >
-              <Target className="w-12 h-12 text-gray-500 mx-auto opacity-50" />
-              <h3 className="text-lg font-mono font-bold text-white uppercase tracking-wider" style={{ color: themeColor }}>
-                Không Thể Tạo Bài Kiểm Tra
+              <Target className="w-12 h-12 text-[var(--color-text-muted)] mx-auto opacity-40" />
+              <h3 className="text-lg font-black uppercase text-[var(--color-primary)]">
+                Không Đủ Dữ Liệu Câu Hỏi
               </h3>
-              <p className="text-xs text-gray-400 font-mono leading-relaxed max-w-sm mx-auto">
-                Chủ đề này hiện chỉ có {words.length} từ vựng. Bạn cần thêm ít nhất 2 từ vựng để hệ thống có thể tạo câu hỏi trắc nghiệm.
+              <p className="text-xs text-[var(--color-text-muted)] font-medium leading-relaxed max-w-sm mx-auto">
+                Chủ đề này chỉ có {words.length} từ vựng. Cần tối thiểu 2 từ vựng trở lên để hệ thống có thể tạo các đáp án trắc nghiệm.
               </p>
               <button
                 onClick={() => setMode('study')}
-                className="btn-secondary px-5 py-2 font-mono text-xs mx-auto flex items-center gap-2 mt-2 cursor-pointer"
+                className="btn-3d-secondary px-5 py-2 mx-auto flex items-center gap-2 mt-2"
               >
-                <Layers className="w-3.5 h-3.5" /> Quay lại chế độ Học
+                <Layers className="w-3.5 h-3.5" /> Quay lại tự học
               </button>
             </motion.div>
           )}
@@ -567,62 +584,73 @@ const StudySession = ({ theme, themeColor, onExit }) => {
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   THEME SELECTOR — màn hình chọn chủ đề
+   THEME SELECTOR — màn hình chọn chủ đề dạng khóa học
+   Lấy cảm hứng từ Duolingo & Elsa: Thêm Badge Cấp Độ và thanh tiến trình đã học
 ═══════════════════════════════════════════════════════════════════════════ */
 const ThemeSelector = ({ themes, onSelectTheme, totalWords }) => {
   if (themes.length === 0) return (
-    <div className="text-center py-20 bg-[var(--color-surface)] rounded-2xl border border-[var(--color-surface-border)]">
-      <p className="text-[var(--color-text-muted)] font-medium">Chưa có chủ đề nào. Hãy sinh từ vựng trước.</p>
+    <div className="text-center py-16 bg-[var(--color-surface)] rounded-2xl border-2 border-[var(--color-surface-border)] p-8">
+      <p className="text-[var(--color-text-muted)] font-bold">Chưa tìm thấy chủ đề học nào. Vui lòng bấm AI sinh từ vựng mới!</p>
     </div>
   );
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {themes.map(({ theme, count }, i) => {
         const cfg = getThemeConfig(theme);
+        const levelBadgeStyle = getLevelBadgeStyle(cfg.level);
         return (
-          <motion.button
+          <motion.div
             key={theme}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
-            whileHover={{ y: -4, shadow: 'md' }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => onSelectTheme(theme, cfg.color)}
-            className="glass-panel p-6 text-left rounded-2xl border border-[var(--color-surface-border)] hover:border-[var(--color-primary)]/50 transition-all duration-300 group relative overflow-hidden bg-[var(--color-surface)]"
+            className="card-3d bg-[var(--color-surface)] hover:-translate-y-1 transition-transform group flex flex-col justify-between"
           >
-            {/* Soft background glow */}
-            <div
-              className="absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl pointer-events-none"
-              style={{ background: cfg.color }}
-            />
+            <div className="p-5 flex-1">
+              {/* Header inside course card */}
+              <div className="flex justify-between items-start mb-4">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-sm border border-[var(--color-surface-border)]" style={{ background: cfg.bg }}>
+                  {cfg.emoji}
+                </div>
 
-            <div className="relative z-10">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 shadow-sm transition-transform duration-300 group-hover:scale-110" style={{ background: `${cfg.color}15` }}>
-                {cfg.emoji}
+                {/* Level badge */}
+                <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-lg border tracking-wider select-none ${levelBadgeStyle}`}>
+                  {cfg.level}
+                </span>
               </div>
-              <h3 className="font-bold text-lg mb-1 text-[var(--color-text)] transition-colors">
+
+              <h3 className="font-black text-lg mb-1 text-[var(--color-text)]">
                 {theme}
               </h3>
-              <p className="text-[var(--color-text-muted)] text-xs font-medium mb-4">{count} từ vựng</p>
+              <p className="text-[var(--color-text-muted)] text-xs font-bold mb-4">{count} từ vựng học phần</p>
+            </div>
 
-              {/* Progress bar */}
-              <div className="w-full h-1.5 bg-[var(--color-surface-border)] rounded-full overflow-hidden">
+            {/* Bottom progress metrics & CTA */}
+            <div className="px-5 pb-5 border-t border-[var(--color-surface-border)] pt-4 mt-auto">
+              <div className="flex justify-between text-[10px] font-bold text-[var(--color-text-muted)] mb-2">
+                <span>TIẾN ĐỘ HỌC</span>
+                <span>{Math.min(100, Math.round((count / Math.max(totalWords, 1)) * 400))}%</span>
+              </div>
+              <div className="w-full h-2 bg-[var(--color-surface-border)] rounded-full overflow-hidden border">
                 <motion.div
                   className="h-full rounded-full"
-                  style={{ background: cfg.color, width: `${Math.min(100, (count / Math.max(totalWords, 1)) * 400)}%` }}
+                  style={{ background: cfg.color }}
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min(100, (count / Math.max(totalWords, 1)) * 400)}%` }}
                   transition={{ duration: 0.8, delay: i * 0.05 + 0.2 }}
                 />
               </div>
 
-              <div className="mt-4 flex items-center gap-1.5 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: cfg.color }}>
-                <GraduationCap className="w-4 h-4" />
-                <span>Bắt đầu học</span>
-              </div>
+              <button
+                onClick={() => onSelectTheme(theme, cfg.color)}
+                className="w-full mt-4 btn-3d-secondary py-2 px-3 text-xs select-none"
+              >
+                <GraduationCap className="w-4 h-4 inline mr-1 text-[var(--color-primary)]" />
+                Vào học ngay
+              </button>
             </div>
-          </motion.button>
+          </motion.div>
         );
       })}
     </div>
@@ -634,7 +662,22 @@ const ThemeSelector = ({ themes, onSelectTheme, totalWords }) => {
 ═══════════════════════════════════════════════════════════════════════════ */
 const Vocabulary = () => {
   const { user } = useAuth();
-  const [tab, setTab] = useState('browse'); // 'browse' | 'theme'
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('add') === 'true') {
+      if (!user) {
+        toast.error('Bạn cần đăng nhập để thêm từ vựng!');
+      } else {
+        setShowAddForm(true);
+      }
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('add');
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, user]);
+
+  const [tab, setTab] = useState('theme'); // Default to 'theme' (Courses list) as per Duolingo style
   const [words, setWords] = useState([]);
   const [themes, setThemes] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -651,7 +694,7 @@ const Vocabulary = () => {
   const [seeding, setSeeding] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [studyTheme, setStudyTheme] = useState(null);
-  const [studyThemeColor, setStudyThemeColor] = useState('#00f0ff');
+  const [studyThemeColor, setStudyThemeColor] = useState('#1cb0f6');
   const [showAddForm, setShowAddForm] = useState(false);
   const [newWordData, setNewWordData] = useState({
     word: '',
@@ -674,7 +717,7 @@ const Vocabulary = () => {
   const handleImageFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     if (!file.type.startsWith('image/')) {
       toast.error('Vui lòng chọn tệp ảnh hợp lệ!');
       return;
@@ -767,13 +810,13 @@ const Vocabulary = () => {
 
   const handleAIGenerate = async (theme = 'Cyberpunk') => {
     setAiLoading(true);
-    const id = toast.loading(`Nexus AI đang sinh từ vựng về chủ đề "${theme}"...`);
+    const id = toast.loading(`AI đang sinh từ vựng về chủ đề "${theme}"...`);
     try {
       const data = await generateAIWords(theme);
       toast.success(data.message || 'AI sinh từ vựng thành công!', { id });
       await Promise.all([fetchWords(1, false, selectedThemeFilter, searchTerm), fetchThemes()]);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Không thể liên kết Nexus AI.', { id });
+      toast.error(err.response?.data?.message || 'Không thể liên kết AI.', { id });
     } finally { setAiLoading(false); }
   };
 
@@ -786,7 +829,7 @@ const Vocabulary = () => {
 
     setSearchingAPI(true);
     const toastId = toast.loading('Đang tra cứu từ điển và dịch nghĩa...');
-    
+
     const dictionaryPromise = fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(w)}`)
       .then(async (res) => {
         if (!res.ok) throw new Error();
@@ -814,7 +857,6 @@ const Vocabulary = () => {
 
       if (dictResult.status === 'fulfilled' && dictResult.value) {
         const entry = dictResult.value;
-        // 1. Extract IPA
         if (entry.phonetic) {
           ipaStr = entry.phonetic;
         } else if (entry.phonetics && entry.phonetics.length > 0) {
@@ -822,7 +864,6 @@ const Vocabulary = () => {
           if (withText) ipaStr = withText.text;
         }
 
-        // 2. Extract Type
         if (entry.meanings && entry.meanings.length > 0) {
           const firstMeaning = entry.meanings[0];
           const pos = firstMeaning.partOfSpeech.toLowerCase();
@@ -832,7 +873,6 @@ const Vocabulary = () => {
           else if (pos.includes('adverb')) typeStr = 'adv';
         }
 
-        // 3. Extract Example
         if (entry.meanings && entry.meanings.length > 0) {
           for (const m of entry.meanings) {
             if (m.definitions && m.definitions.length > 0) {
@@ -881,7 +921,6 @@ const Vocabulary = () => {
       const data = await createVocabulary(newWordData);
       toast.success(data.message || 'Thêm từ vựng mới thành công!');
       setShowAddForm(false);
-      // Reset form
       setNewWordData({
         word: '',
         ipa: '',
@@ -891,7 +930,6 @@ const Vocabulary = () => {
         theme: 'General',
         imageUrl: ''
       });
-      // Refresh list and themes
       await Promise.all([fetchWords(1, false, selectedThemeFilter, searchTerm), fetchThemes()]);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Lỗi khi thêm từ vựng.');
@@ -905,7 +943,7 @@ const Vocabulary = () => {
     try {
       const data = await toggleFavoriteWord(wordId);
       setFavorites(data.favoriteWords);
-      toast.success(data.favoriteWords.includes(wordId) ? '❤️ Thêm yêu thích!' : '💔 Đã xóa');
+      toast.success(data.favoriteWords.includes(wordId) ? '❤️ Thêm vào yêu thích!' : '💔 Đã xóa yêu thích');
     } catch { toast.error('Có lỗi xảy ra.'); }
   };
 
@@ -916,42 +954,39 @@ const Vocabulary = () => {
     await fetchWords(next, true, selectedThemeFilter, searchTerm);
   };
 
-  /* Browse tab: filtered words (fetched from backend) */
   const filteredWords = words;
-
   const allThemes = useMemo(() => themes.map(t => t.theme).filter(Boolean).sort(), [themes]);
-
   const goTo = (idx) => { setIsFlipped(false); setTimeout(() => setCurrentIndex(idx), 150); };
-
   const totalWords = themes.reduce((s, t) => s + t.count, 0);
 
-  /* ── If in study session ── */
+  /* Study session view handler */
   if (studyTheme) {
     return (
-      <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" className="max-w-7xl mx-auto">
+      <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" className="max-w-7xl mx-auto px-4 pt-4">
         <StudySession
           theme={studyTheme}
           themeColor={studyThemeColor}
           onExit={() => { setStudyTheme(null); fetchThemes(); }}
+          favorites={favorites}
+          onToggleFav={handleToggleFav}
         />
       </motion.div>
     );
   }
 
-  /* ── Loading / Error ── */
-  if (loading) return (
+  if (loading && page === 1) return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
       <Loader2 className="w-12 h-12 text-[var(--color-primary)] animate-spin" />
-      <span className="font-mono text-[var(--color-primary)] animate-pulse text-sm">Đang giải mã dữ liệu...</span>
+      <span className="font-bold text-[var(--color-primary)] text-sm">Đang tải kho từ vựng...</span>
     </div>
   );
 
   if (error) return (
-    <div className="min-h-[50vh] flex flex-col items-center justify-center gap-6 text-center">
+    <div className="min-h-[50vh] flex flex-col items-center justify-center gap-6 text-center px-4">
       <BookOpen className="w-16 h-16 text-[var(--color-secondary)] opacity-50 mx-auto" />
-      <p className="text-[var(--color-secondary)] font-mono">{error}</p>
-      <div className="flex gap-3">
-        <button onClick={handleSeed} disabled={seeding} className="btn-primary flex items-center gap-2 px-5 py-2.5 font-mono text-sm">
+      <p className="text-[var(--color-secondary)] font-bold text-lg">{error}</p>
+      <div className="flex gap-4">
+        <button onClick={handleSeed} disabled={seeding} className="btn-3d-primary flex items-center gap-2 px-6 py-3">
           {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />} Khởi tạo mẫu
         </button>
         <button
@@ -962,7 +997,7 @@ const Vocabulary = () => {
             setShowAIThemeModal(true);
           }}
           disabled={aiLoading}
-          className="btn-secondary flex items-center gap-2 px-5 py-2.5 font-mono text-sm cursor-pointer"
+          className="btn-3d-secondary flex items-center gap-2 px-6 py-3"
         >
           {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} AI Sinh Từ Mới
         </button>
@@ -971,90 +1006,83 @@ const Vocabulary = () => {
   );
 
   return (
-    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" className="max-w-7xl mx-auto">
+    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" className="max-w-7xl mx-auto px-4 pb-16 pt-4 bg-[var(--color-bg)]">
       {/* ── Page header ── */}
-      <header className="mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
-          <div>
-            <h1 className="text-3xl font-black font-mono uppercase tracking-widest text-glow text-[var(--color-primary)] mb-1">
-              Cơ Sở Dữ Liệu Từ Vựng
-            </h1>
-            <p className="text-gray-500 font-mono text-xs">{totalWords} từ · {themes.length} chủ đề</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => {
-                if (!user) return toast.error('Bạn cần đăng nhập để thêm từ vựng!');
-                setShowAddForm(true);
-              }}
-              className="btn-secondary flex items-center gap-2 px-4 py-2 font-mono text-xs uppercase tracking-wider border border-white/10 hover:border-[var(--color-primary)] transition-all"
-              style={{ boxShadow: '0 0 10px rgba(0,240,255,0.05)' }}
-            >
-              <Plus className="w-4 h-4 text-[var(--color-primary)]" /> Thêm Từ
-            </button>
-            <button
-              onClick={handleSeed}
-              disabled={seeding}
-              className="btn-secondary flex items-center gap-2 px-4 py-2 font-mono text-xs uppercase tracking-wider border border-white/10 hover:border-[var(--color-primary)] transition-all"
-              style={{ boxShadow: '0 0 10px rgba(0,240,255,0.05)' }}
-            >
-              {seeding
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Đang Reset...</>
-                : <><Database className="w-4 h-4 text-[var(--color-primary)]" /> Reset Mẫu</>
-              }
-            </button>
-            <button
-              onClick={() => {
-                if (!user) return toast.error('Bạn cần đăng nhập để sinh từ vựng!');
-                setSelectedAITheme('Cyberpunk');
-                setCustomAITheme('');
-                setShowAIThemeModal(true);
-              }}
-              disabled={aiLoading}
-              className="btn-primary flex items-center gap-2 px-4 py-2 font-mono text-xs uppercase tracking-wider cursor-pointer"
-              style={{ borderColor: 'var(--color-accent)', boxShadow: '0 0 10px rgba(255,0,128,0.15)' }}
-            >
-              {aiLoading
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Đang tạo...</>
-                : <><Sparkles className="w-4 h-4 text-[var(--color-accent)]" /> AI Sinh Từ Mới</>
-              }
-            </button>
-          </div>
+      <header className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-5 bg-[var(--color-surface)] p-5 rounded-2xl border-2 border-[var(--color-surface-border)]">
+        <div>
+          <h1 className="text-2xl font-black uppercase tracking-wider text-[var(--color-primary)] mb-1">
+            Kho từ vựng thông minh
+          </h1>
+          <p className="text-[var(--color-text-muted)] text-xs font-bold uppercase tracking-wide">{totalWords} từ vựng · {themes.length} chủ đề học phần</p>
         </div>
-
-        {/* ── Tab navigation ── */}
-        <div className="flex gap-1 bg-black/50 border border-white/10 p-1 rounded-xl w-fit">
-          {[
-            { key: 'browse', label: 'Duyệt Từ Vựng', icon: <BookOpen className="w-4 h-4" /> },
-            { key: 'theme', label: 'Học Theo Chủ Đề', icon: <GraduationCap className="w-4 h-4" /> },
-            { key: 'favorites', label: 'Từ Yêu Thích', icon: <Heart className="w-4 h-4" /> },
-          ].map(({ key, label, icon }) => (
-            <button
-              key={key}
-              onClick={() => setTab(key)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-sm font-bold transition-all ${
-                tab === key
-                  ? 'bg-[var(--color-primary)] text-black'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              {icon} {label}
-            </button>
-          ))}
+        <div className="flex flex-wrap gap-2.5">
+          <button
+            onClick={() => {
+              if (!user) return toast.error('Bạn cần đăng nhập để thêm từ vựng!');
+              setShowAddForm(true);
+            }}
+            className="btn-3d-secondary flex items-center gap-1.5 px-4 py-2.5 text-xs"
+          >
+            <Plus className="w-4 h-4 text-[var(--color-primary)]" /> Thêm từ mới
+          </button>
+          <button
+            onClick={handleSeed}
+            disabled={seeding}
+            className="btn-3d-secondary flex items-center gap-1.5 px-4 py-2.5 text-xs"
+          >
+            {seeding
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Đang Reset...</>
+              : <><Database className="w-4 h-4 text-[var(--color-primary)]" /> Reset dữ liệu</>
+            }
+          </button>
+          <button
+            onClick={() => {
+              if (!user) return toast.error('Bạn cần đăng nhập để sinh từ vựng!');
+              setSelectedAITheme('Cyberpunk');
+              setCustomAITheme('');
+              setShowAIThemeModal(true);
+            }}
+            disabled={aiLoading}
+            className="btn-3d-primary flex items-center gap-1.5 px-4 py-2.5 text-xs"
+          >
+            {aiLoading
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Đang tạo...</>
+              : <><Sparkles className="w-4 h-4 text-white" /> AI sinh từ</>
+            }
+          </button>
         </div>
       </header>
 
-      {/* ═══ TAB: HỌC THEO CHỦ ĐỀ ════════════════════════════════════════ */}
+      {/* ── Tab navigation ── */}
+      <div className="flex gap-1.5 bg-[var(--color-surface)] border-2 border-[var(--color-surface-border)] p-1 rounded-2xl w-fit mb-6">
+        {[
+          { key: 'theme', label: 'Bài học chủ đề', icon: <GraduationCap className="w-4 h-4" /> },
+          { key: 'browse', label: 'Duyệt từ điển', icon: <BookOpen className="w-4 h-4" /> },
+          { key: 'favorites', label: 'Từ yêu thích', icon: <Heart className="w-4 h-4" /> },
+        ].map(({ key, label, icon }) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${tab === key
+                ? 'bg-[var(--color-primary)] text-white shadow-sm'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+              }`}
+          >
+            {icon} {label}
+          </button>
+        ))}
+      </div>
+
       <AnimatePresence mode="wait">
+        {/* ═══ TAB: BÀI HỌC CHỦ ĐỀ ═══ */}
         {tab === 'theme' && (
           <motion.div key="theme" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <div className="mb-6">
-              <div className="flex items-center gap-3 mb-2">
-                <GraduationCap className="w-5 h-5 text-[var(--color-accent)]" />
-                <h2 className="text-lg font-bold font-mono uppercase tracking-wider">Chọn Chủ Đề Để Học</h2>
-              </div>
-              <p className="text-gray-500 font-mono text-xs">
-                Chọn một chủ đề để bắt đầu phiên học flashcard + kiểm tra nhanh
+              <h2 className="text-base font-black uppercase tracking-wider text-[var(--color-text)] mb-1 flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-[var(--color-primary)]" /> Lựa chọn bài học tiếng Anh
+              </h2>
+              <p className="text-[var(--color-text-muted)] text-xs font-bold uppercase tracking-wide">
+                Học qua thẻ Flashcard 3D kết hợp làm bài kiểm tra phản xạ nơ-ron
               </p>
             </div>
             <ThemeSelector
@@ -1065,54 +1093,62 @@ const Vocabulary = () => {
           </motion.div>
         )}
 
-        {/* ═══ TAB: DUYỆT TỪ VỰNG ══════════════════════════════════════ */}
+        {/* ═══ TAB: DUYỆT TỪ ĐIỂN ═══ */}
         {tab === 'browse' && (
           <motion.div key="browse" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-5">
+            <div className="flex flex-col sm:flex-row gap-4 mb-6 bg-[var(--color-surface)] p-4 rounded-2xl border-2 border-[var(--color-surface-border)]">
+              {/* Search */}
               <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
                 <input
                   type="text"
-                  placeholder="Tìm từ hoặc nghĩa..."
+                  placeholder="Tìm kiếm từ hoặc nghĩa..."
                   value={searchTerm}
                   onChange={(e) => { setSearchTerm(e.target.value); setCurrentIndex(0); }}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-[var(--color-primary)]/50 font-mono transition-colors"
+                  className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-xl py-2 pl-10 pr-8 text-xs font-bold text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                 />
                 {searchTerm && (
-                  <button onClick={() => { setSearchTerm(''); setCurrentIndex(0); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                  <button onClick={() => { setSearchTerm(''); setCurrentIndex(0); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] cursor-pointer">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
+
+              {/* Theme filtering */}
               <div className="flex gap-2 flex-wrap items-center">
-                <Filter className="w-4 h-4 text-gray-500 shrink-0" />
+                <span className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-muted)]">Bộ lọc:</span>
                 <button
                   onClick={() => { setSelectedThemeFilter(''); setCurrentIndex(0); }}
-                  className={`text-[10px] font-mono px-3 py-1.5 rounded-full border transition-all uppercase tracking-wider ${
-                    !selectedThemeFilter ? 'bg-[var(--color-primary)] text-black border-[var(--color-primary)]' : 'border-white/10 text-gray-400 hover:border-white/30'
-                  }`}
+                  className={`text-[9px] font-black px-2.5 py-1.5 rounded-lg border transition-all uppercase tracking-wider cursor-pointer ${!selectedThemeFilter ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-sm' : 'border-[var(--color-surface-border)] bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:border-gray-300'
+                    }`}
                 >Tất cả</button>
                 {allThemes.map((theme) => {
                   const cfg = getThemeConfig(theme);
+                  const isSelected = selectedThemeFilter === theme;
                   return (
                     <button
                       key={theme}
-                      onClick={() => { setSelectedThemeFilter(theme === selectedThemeFilter ? '' : theme); setCurrentIndex(0); }}
-                      className="text-[10px] font-mono px-3 py-1.5 rounded-full border transition-all uppercase tracking-wider"
+                      onClick={() => { setSelectedThemeFilter(isSelected ? '' : theme); setCurrentIndex(0); }}
+                      className="text-[9px] font-black px-2.5 py-1.5 rounded-lg border transition-all uppercase tracking-wider cursor-pointer"
                       style={{
-                        background: selectedThemeFilter === theme ? cfg.color + '30' : 'transparent',
-                        borderColor: selectedThemeFilter === theme ? cfg.color : 'rgba(255,255,255,0.1)',
-                        color: selectedThemeFilter === theme ? cfg.color : '#6b7280',
+                        background: isSelected ? cfg.color : 'var(--color-bg)',
+                        borderColor: isSelected ? cfg.color : 'var(--color-surface-border)',
+                        color: isSelected ? '#ffffff' : 'var(--color-text-muted)',
                       }}
                     >{theme}</button>
                   );
                 })}
               </div>
-              <div className="flex gap-1 ml-auto">
+
+              {/* View mode toggle */}
+              <div className="flex gap-1 sm:ml-auto">
                 {[{ mode: 'flashcard', icon: <Layers className="w-4 h-4" /> }, { mode: 'grid', icon: <Grid3X3 className="w-4 h-4" /> }].map(({ mode, icon }) => (
-                  <button key={mode} onClick={() => setViewMode(mode)}
-                    className={`p-2 rounded-lg border transition-all ${viewMode === mode ? 'bg-[var(--color-primary)] text-black border-[var(--color-primary)]' : 'border-white/10 text-gray-500 hover:text-white'}`}>
+                  <button
+                    key={mode}
+                    onClick={() => setViewMode(mode)}
+                    className={`p-2 rounded-xl border transition-all cursor-pointer ${viewMode === mode ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]' : 'border-[var(--color-surface-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg)]'}`}
+                  >
                     {icon}
                   </button>
                 ))}
@@ -1120,17 +1156,17 @@ const Vocabulary = () => {
             </div>
 
             {totalWords === 0 ? (
-              <div className="glass-panel p-8 text-center max-w-xl mx-auto border border-white/5 my-10 shadow-[0_0_30px_rgba(0,240,255,0.05)]">
+              <div className="card-3d p-8 text-center max-w-xl mx-auto bg-[var(--color-surface)] my-10">
                 <BookOpen className="w-12 h-12 text-[var(--color-primary)] opacity-40 mx-auto mb-4" />
-                <h3 className="text-lg font-mono font-bold text-white mb-2 uppercase tracking-widest text-[var(--color-primary)]">Cơ sở dữ liệu trống</h3>
-                <p className="text-xs text-gray-400 font-mono mb-6 leading-relaxed">
-                  Kho từ vựng của bạn hiện chưa có dữ liệu. Bạn có thể tự thêm từ thủ công bằng nút "Thêm Từ" ở trên hoặc khởi tạo dữ liệu mẫu bên dưới.
+                <h3 className="text-lg font-black text-[var(--color-text)] mb-2 uppercase">Kho từ vựng chưa được tạo</h3>
+                <p className="text-xs text-[var(--color-text-muted)] mb-6 font-medium max-w-md mx-auto leading-relaxed">
+                  Hiện bạn chưa có từ vựng nào. Hãy bấm nạp dữ liệu mẫu hoặc sử dụng Gemini AI tự sinh từ vựng để bắt đầu học nhé!
                 </p>
-                <div className="flex gap-3 justify-center">
+                <div className="flex gap-4 justify-center">
                   <button
                     onClick={handleSeed}
                     disabled={seeding}
-                    className="btn-secondary flex items-center gap-2 px-5 py-2.5 font-mono text-xs uppercase border border-white/10 hover:border-[var(--color-primary)] transition-all"
+                    className="btn-3d-secondary flex items-center gap-2 px-5 py-2.5 text-xs"
                   >
                     {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />} Khởi tạo mẫu
                   </button>
@@ -1142,111 +1178,134 @@ const Vocabulary = () => {
                       setShowAIThemeModal(true);
                     }}
                     disabled={aiLoading}
-                    className="btn-primary flex items-center gap-2 px-5 py-2.5 font-mono text-xs uppercase cursor-pointer"
-                    style={{ borderColor: 'var(--color-accent)', boxShadow: '0 0 10px rgba(255,0,128,0.1)' }}
+                    className="btn-3d-primary flex items-center gap-2 px-5 py-2.5 text-xs"
                   >
                     {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} AI Sinh Từ Mới
                   </button>
                 </div>
               </div>
             ) : filteredWords.length === 0 ? (
-              <div className="text-center py-20 text-gray-500 font-mono border border-white/5 rounded-2xl bg-black/20">
-                <p className="mb-2">Không tìm thấy từ nào phù hợp với bộ lọc.</p>
+              <div className="text-center py-16 text-[var(--color-text-muted)] font-bold bg-[var(--color-surface)] border-2 border-[var(--color-surface-border)] rounded-2xl">
+                <p className="mb-2">Không tìm thấy từ vựng nào phù hợp.</p>
                 <button
                   onClick={() => { setSelectedThemeFilter(''); setSearchTerm(''); }}
-                  className="text-xs text-[var(--color-primary)] underline hover:text-white transition-colors"
+                  className="text-xs text-[var(--color-primary)] font-bold underline hover:text-[var(--color-primary-hover)] transition-colors"
                 >
-                  Xóa bộ lọc để quay lại
+                  Xóa bộ lọc tìm kiếm
                 </button>
               </div>
             ) : viewMode === 'flashcard' ? (
               /* ── Flashcard view ── */
               <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
-                {/* List */}
-                <div className="glass-panel p-3 h-[520px] flex flex-col">
-                  <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest px-2 mb-2">Danh sách ({filteredWords.length})</p>
-                  <div className="flex-1 overflow-y-auto custom-scrollbar space-y-0.5 pr-1">
+                {/* List scrollbox */}
+                <div className="card-3d p-3 h-[520px] flex flex-col bg-[var(--color-surface)]">
+                  <p className="text-[10px] font-black text-[var(--color-text-muted)] uppercase tracking-wider px-2 mb-2">Danh sách từ ({filteredWords.length})</p>
+                  <div className="flex-1 overflow-y-auto space-y-1 pr-1">
                     {filteredWords.map((w, i) => {
                       const cfg = getThemeConfig(w.theme);
+                      const isCurrent = i === currentIndex;
                       return (
-                        <button key={w.id} onClick={() => { setIsFlipped(false); setTimeout(() => setCurrentIndex(i), 80); }}
-                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${i === currentIndex ? 'bg-[var(--color-primary)]/15 border border-[var(--color-primary)]/40' : 'border border-transparent hover:bg-white/5'}`}>
-                          <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: cfg.color }} />
+                        <button
+                          key={w.id}
+                          onClick={() => { setIsFlipped(false); setTimeout(() => setCurrentIndex(i), 80); }}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left border-2 transition-all cursor-pointer ${isCurrent ? 'bg-sky-50 dark:bg-sky-950/30 border-[var(--color-primary)]' : 'border-transparent hover:bg-[var(--color-bg)]'}`}
+                        >
+                          <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: cfg.color }} />
                           <div className="flex-1 min-w-0">
-                            <p className={`font-mono font-bold text-sm truncate ${i === currentIndex ? 'text-[var(--color-primary)]' : 'text-white'}`}>{w.word}</p>
-                            <p className="text-[10px] text-gray-500 truncate font-mono">{w.meaning}</p>
+                            <p className={`font-bold text-xs truncate ${isCurrent ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>{w.word}</p>
+                            <p className="text-[9px] text-[var(--color-text-muted)] truncate font-bold uppercase mt-0.5">{w.meaning}</p>
                           </div>
                           {favorites.includes(w.id) && <Heart className="w-3 h-3 text-red-500 fill-red-500 shrink-0" />}
                         </button>
                       );
                     })}
                     {hasMore && (
-                      <button onClick={loadMore} disabled={loadingMore}
-                        className="w-full mt-2 py-2 text-xs font-mono text-gray-500 hover:text-[var(--color-primary)] border border-white/10 hover:border-[var(--color-primary)]/40 rounded-lg transition-all flex items-center justify-center gap-2">
-                        {loadingMore ? <Loader2 className="w-3 h-3 animate-spin" /> : '+ Tải thêm'}
+                      <button
+                        onClick={loadMore}
+                        disabled={loadingMore}
+                        className="w-full mt-2 btn-3d-secondary py-2 text-xs font-black"
+                      >
+                        {loadingMore ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Tải thêm từ'}
                       </button>
                     )}
                   </div>
                 </div>
 
-                {/* Flashcard */}
+                {/* 3D Flashcard render with perspective wrapper */}
                 {filteredWords[currentIndex] && (() => {
                   const w = filteredWords[currentIndex];
                   const cfg = getThemeConfig(w.theme);
+                  const isCurrentFav = favorites.includes(w.id);
                   return (
-                    <div className="flex flex-col gap-4 items-center">
-                      <AnimatePresence mode="wait">
-                        <motion.div key={currentIndex} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="w-full max-w-lg">
-                          <div
-                            className="w-full rounded-2xl border-2 overflow-hidden relative cursor-pointer select-none"
-                            style={{ minHeight: '280px', borderColor: cfg.color + '50', background: 'rgba(0,0,0,0.85)', boxShadow: `0 0 30px ${cfg.color}18` }}
-                            onClick={() => setIsFlipped(!isFlipped)}
-                          >
-                            {w.imageUrl && <div className="absolute inset-0 bg-cover bg-center opacity-15" style={{ backgroundImage: `url(${w.imageUrl})`, filter: 'grayscale(40%) sepia(80%) hue-rotate(160deg)' }} />}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/30" />
-                            <AnimatePresence mode="wait">
-                              {!isFlipped ? (
-                                <motion.div key="f" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 flex flex-col items-center justify-center p-8 min-h-[280px] text-center">
-                                  <div className="flex gap-2 mb-3">
-                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full uppercase tracking-widest" style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}50` }}>{w.theme}</span>
-                                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-gray-500">{w.type}</span>
-                                  </div>
-                                  <h2 className="text-5xl font-black text-white mb-2">{w.word}</h2>
-                                  <p className="text-lg font-mono mb-4" style={{ color: cfg.color }}>{w.ipa}</p>
-                                  <div className="flex gap-3">
-                                    <button onClick={(e) => { e.stopPropagation(); speak(w.word); }} className="p-3 rounded-full border transition-all hover:scale-110" style={{ borderColor: cfg.color + '40', color: cfg.color }}>
-                                      <Volume2 className="w-5 h-5" />
-                                    </button>
-                                    <button onClick={(e) => { e.stopPropagation(); handleToggleFav(w.id); }} className="p-3 rounded-full border border-white/10 hover:border-red-400 transition-all hover:scale-110">
-                                      <Heart className={`w-5 h-5 ${favorites.includes(w.id) ? 'text-red-500 fill-red-500' : 'text-gray-500'}`} />
-                                    </button>
-                                  </div>
-                                  <p className="absolute bottom-3 text-[10px] text-gray-600 font-mono uppercase tracking-widest">Nhấn để xem nghĩa →</p>
-                                </motion.div>
-                              ) : (
-                                <motion.div key="b" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10 flex flex-col items-center justify-center p-8 min-h-[280px] text-center gap-3">
-                                  <h3 className="text-3xl font-bold text-white">{w.meaning}</h3>
-                                  <div className="w-12 h-px" style={{ background: cfg.color }} />
-                                  <p className="text-gray-400 italic text-sm">"{w.example}"</p>
-                                  <button onClick={(e) => { e.stopPropagation(); speak(w.example, 0.8); }} className="flex items-center gap-2 text-xs font-mono border px-3 py-1.5 rounded-full" style={{ color: cfg.color, borderColor: cfg.color + '40' }}>
-                                    <Volume2 className="w-3.5 h-3.5" /> Nghe ví dụ
-                                  </button>
-                                  <p className="absolute bottom-3 text-[10px] text-gray-600 font-mono">← Nhấn để quay lại</p>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
+                    <div className="flex flex-col gap-6 items-center">
+                      <div className="w-full h-80 perspective-1000 select-none cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
+                        <div className={`relative w-full h-full transition-transform duration-500 preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+
+                          {/* Front face */}
+                          <div className="absolute inset-0 backface-hidden card-3d p-8 flex flex-col items-center justify-center text-center bg-[var(--color-surface)] border-2">
+                            {w.imageUrl && <div className="absolute inset-0 bg-cover bg-center opacity-[0.04] rounded-2xl pointer-events-none" style={{ backgroundImage: `url(${w.imageUrl})` }} />}
+
+                            <div className="absolute top-4 left-4 right-4 flex justify-between items-center pointer-events-auto">
+                              <div className="flex gap-2">
+                                <span className="text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider" style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}30` }}>{w.theme}</span>
+                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-lg border border-[var(--color-surface-border)] bg-[var(--color-bg)] text-[var(--color-text-muted)] uppercase tracking-wider">{w.type}</span>
+                              </div>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleToggleFav(w.id); }}
+                                className="p-1.5 rounded-lg border-2 border-[var(--color-surface-border)] hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                              >
+                                <Heart className={`w-4 h-4 ${isCurrentFav ? 'text-red-500 fill-red-500' : 'text-[var(--color-text-muted)]'}`} />
+                              </button>
+                            </div>
+
+                            <h2 className="text-4xl md:text-5xl font-black text-[var(--color-text)] mb-2">{w.word}</h2>
+                            <p className="text-lg font-bold font-mono text-[var(--color-primary)] mb-5">{w.ipa}</p>
+
+                            <button
+                              onClick={(e) => { e.stopPropagation(); speak(w.word); }}
+                              className="p-3 rounded-xl border-2 border-[var(--color-surface-border)] text-[var(--color-primary)] bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/30 transition-colors pointer-events-auto active:scale-95"
+                            >
+                              <Volume2 className="w-5 h-5" />
+                            </button>
+                            <p className="absolute bottom-4 text-[9px] text-[var(--color-text-muted)] font-black uppercase tracking-wider">Chạm để lật xem định nghĩa</p>
                           </div>
-                        </motion.div>
-                      </AnimatePresence>
-                      {/* Nav */}
-                      <div className="flex items-center gap-4 w-full max-w-lg justify-between">
-                        <button onClick={() => goTo(currentIndex - 1)} disabled={currentIndex === 0}
-                          className="flex items-center gap-1 px-4 py-2 rounded-xl border font-mono text-sm transition-all border-white/10 text-gray-500 disabled:opacity-30 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]">
+
+                          {/* Back face */}
+                          <div className="absolute inset-0 backface-hidden rotate-y-180 card-3d p-8 flex flex-col items-center justify-center text-center bg-[var(--color-surface)] border-2">
+                            <span className="absolute top-4 left-4 text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest bg-orange-50 border border-orange-200 text-orange-600 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900">
+                              Định nghĩa
+                            </span>
+                            <h3 className="text-2xl md:text-3xl font-black text-[var(--color-text)] mb-3">{w.meaning}</h3>
+                            <div className="w-12 h-1 bg-[var(--color-surface-border)] rounded-full mb-3" />
+                            <p className="text-[var(--color-text-muted)] italic text-sm font-bold max-w-sm">"{w.example}"</p>
+
+                            <button
+                              onClick={(e) => { e.stopPropagation(); speak(w.example, 0.8); }}
+                              className="mt-4 flex items-center gap-1.5 text-xs font-bold border-2 border-[var(--color-surface-border)] px-3 py-1.5 rounded-xl hover:bg-[var(--color-bg)] transition-colors pointer-events-auto"
+                            >
+                              <Volume2 className="w-4 h-4 text-[var(--color-primary)]" /> Nghe ví dụ
+                            </button>
+                            <p className="absolute bottom-4 text-[9px] text-[var(--color-text-muted)] font-black uppercase tracking-wider">Chạm để quay lại mặt trước</p>
+                          </div>
+
+                        </div>
+                      </div>
+
+                      {/* Pagination Controls */}
+                      <div className="flex items-center justify-between w-full max-w-lg bg-[var(--color-surface)] p-3 rounded-2xl border-2 border-[var(--color-surface-border)]">
+                        <button
+                          onClick={() => goTo(currentIndex - 1)}
+                          disabled={currentIndex === 0}
+                          className="flex items-center gap-1 px-4 py-2 rounded-xl border-2 border-[var(--color-surface-border)] font-bold text-xs transition-all disabled:opacity-40 hover:bg-[var(--color-bg)] cursor-pointer"
+                        >
                           <ChevronLeft className="w-4 h-4" /> Trước
                         </button>
-                        <p className="font-mono text-sm text-gray-400">{currentIndex + 1} / {filteredWords.length}</p>
-                        <button onClick={() => goTo(currentIndex + 1)} disabled={currentIndex === filteredWords.length - 1}
-                          className="flex items-center gap-1 px-4 py-2 rounded-xl border font-mono text-sm transition-all border-white/10 text-gray-500 disabled:opacity-30 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]">
+                        <p className="font-bold text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Từ {currentIndex + 1} / {filteredWords.length}</p>
+                        <button
+                          onClick={() => goTo(currentIndex + 1)}
+                          disabled={currentIndex === filteredWords.length - 1}
+                          className="flex items-center gap-1 px-4 py-2 rounded-xl border-2 border-[var(--color-surface-border)] font-bold text-xs transition-all disabled:opacity-40 hover:bg-[var(--color-bg)] cursor-pointer"
+                        >
                           Tiếp <ChevronRight className="w-4 h-4" />
                         </button>
                       </div>
@@ -1257,27 +1316,37 @@ const Vocabulary = () => {
             ) : (
               /* ── Grid view ── */
               <div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                   {filteredWords.map((w, i) => {
                     const cfg = getThemeConfig(w.theme);
+                    const isF = favorites.includes(w.id);
                     return (
-                      <motion.div key={w.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: (i % 12) * 0.04 }}
-                        className="glass-panel p-4 rounded-xl border border-white/8 hover:border-white/20 transition-all duration-200 group relative overflow-hidden"
-                        onMouseEnter={(e) => e.currentTarget.style.boxShadow = `0 0 20px ${cfg.color}15`}
-                        onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}>
-                        <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(to right, ${cfg.color}, transparent)` }} />
-                        <div className="flex justify-between items-start mb-3">
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full uppercase" style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}40` }}>{w.theme}</span>
-                          <button onClick={() => handleToggleFav(w.id)} className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Heart className={`w-4 h-4 ${favorites.includes(w.id) ? 'text-red-500 fill-red-500' : 'text-gray-600'}`} />
-                          </button>
+                      <motion.div
+                        key={w.id}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: (i % 12) * 0.04 }}
+                        className="card-3d p-4 bg-[var(--color-surface)] hover:-translate-y-1 transition-transform relative overflow-hidden flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="flex justify-between items-start mb-3">
+                            <span className="text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider" style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}30` }}>{w.theme}</span>
+                            <button onClick={() => handleToggleFav(w.id)} className="p-1 rounded-lg hover:bg-[var(--color-bg)] cursor-pointer">
+                              <Heart className={`w-4 h-4 ${isF ? 'text-red-500 fill-red-500' : 'text-[var(--color-text-muted)]'}`} />
+                            </button>
+                          </div>
+
+                          <h3 className="text-xl font-black text-[var(--color-text)] mb-0.5">{w.word}</h3>
+                          <p className="text-xs font-bold font-mono text-[var(--color-primary)] mb-2">{w.ipa}</p>
+                          <p className="text-xs text-[var(--color-text-muted)] font-bold mb-4 line-clamp-2">{w.meaning}</p>
                         </div>
-                        <h3 className="text-xl font-black font-mono text-white mb-1">{w.word}</h3>
-                        <p className="text-xs font-mono mb-2" style={{ color: cfg.color }}>{w.ipa}</p>
-                        <p className="text-sm text-gray-400 mb-3 line-clamp-2">{w.meaning}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-gray-600 font-mono border border-white/10 px-2 py-0.5 rounded">{w.type}</span>
-                          <button onClick={() => speak(w.word)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: cfg.color }}>
+
+                        <div className="flex items-center justify-between border-t border-[var(--color-surface-border)] pt-3 mt-auto">
+                          <span className="text-[9px] text-[var(--color-text-muted)] font-black border border-[var(--color-surface-border)] bg-[var(--color-bg)] px-2 py-0.5 rounded-lg uppercase tracking-wider">{w.type}</span>
+                          <button
+                            onClick={() => speak(w.word)}
+                            className="p-1.5 rounded-xl border border-[var(--color-surface-border)] hover:bg-[var(--color-bg)] transition-colors cursor-pointer text-[var(--color-primary)] active:scale-90"
+                          >
                             <Volume2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -1287,7 +1356,7 @@ const Vocabulary = () => {
                 </div>
                 {hasMore && (
                   <div className="text-center mt-8">
-                    <button onClick={loadMore} disabled={loadingMore} className="btn-secondary px-8 py-3 font-mono text-sm flex items-center gap-2 mx-auto">
+                    <button onClick={loadMore} disabled={loadingMore} className="btn-3d-secondary px-8 py-3 text-xs mx-auto">
                       {loadingMore && <Loader2 className="w-4 h-4 animate-spin" />} Tải thêm từ vựng
                     </button>
                   </div>
@@ -1297,52 +1366,51 @@ const Vocabulary = () => {
           </motion.div>
         )}
 
+        {/* ═══ TAB: TỪ YÊU THÍCH ═══ */}
         {tab === 'favorites' && (
           <motion.div key="favorites" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-[var(--color-surface)] p-4 rounded-2xl border-2 border-[var(--color-surface-border)]">
               <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-                  <h2 className="text-lg font-bold font-mono uppercase tracking-wider">Từ Vựng Yêu Thích</h2>
-                </div>
-                <p className="text-gray-500 font-mono text-xs">
-                  Danh sách những từ vựng bạn đã đánh dấu yêu thích để tập trung ôn luyện
+                <h2 className="text-base font-black uppercase tracking-wider text-[var(--color-text)] mb-1 flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-red-500 fill-red-500" /> Sổ tay từ vựng ưu tú
+                </h2>
+                <p className="text-[var(--color-text-muted)] text-xs font-bold uppercase tracking-wide">
+                  Tập trung ôn tập những từ vựng bạn đã đánh dấu yêu thích
                 </p>
               </div>
               {user && favoriteWordsList.length > 1 && (
                 <button
                   onClick={() => { setStudyTheme('__favorites__'); setStudyThemeColor('#ef4444'); }}
-                  className="btn-primary flex items-center gap-2 px-5 py-2 font-mono text-xs uppercase tracking-wider animate-pulse"
-                  style={{ borderColor: '#ef4444', boxShadow: '0 0 10px rgba(239,68,68,0.15)' }}
+                  className="btn-3d-danger flex items-center gap-2 px-5 py-2.5 text-xs animate-pulse"
                 >
-                  <GraduationCap className="w-4 h-4 text-white" /> Bắt Đầu Ôn Tập ({favoriteWordsList.length})
+                  <GraduationCap className="w-4 h-4 text-white" /> Bắt đầu ôn tập ({favoriteWordsList.length})
                 </button>
               )}
             </div>
 
             {!user ? (
-              <div className="glass-panel p-10 text-center max-w-md mx-auto border border-white/5 my-10">
-                <Heart className="w-12 h-12 text-red-500/40 mx-auto mb-4 animate-pulse" />
-                <h3 className="text-lg font-mono font-bold text-white mb-2 uppercase">Yêu cầu đăng nhập</h3>
-                <p className="text-xs text-gray-400 font-mono mb-6">
-                  Vui lòng đăng nhập tài khoản của bạn để lưu và bắt đầu phiên ôn tập các từ vựng yêu thích.
+              <div className="card-3d p-10 text-center max-w-md mx-auto bg-[var(--color-surface)]">
+                <Heart className="w-12 h-12 text-red-400 mx-auto mb-4 animate-pulse" />
+                <h3 className="text-lg font-black text-[var(--color-text)] mb-2 uppercase">Yêu cầu đăng nhập</h3>
+                <p className="text-xs text-[var(--color-text-muted)] font-medium leading-relaxed">
+                  Vui lòng đăng nhập tài khoản của bạn để bắt đầu lưu trữ và ôn tập danh sách từ vựng yêu thích.
                 </p>
               </div>
             ) : loadingFavorites ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <Loader2 className="w-8 h-8 animate-spin text-[var(--color-primary)]" />
-                <span className="font-mono text-xs text-gray-500">Đang quét kho thần kinh...</span>
+                <span className="text-xs text-[var(--color-text-muted)] font-bold">Đang tải sổ tay của bạn...</span>
               </div>
             ) : favoriteWordsList.length === 0 ? (
-              <div className="glass-panel p-10 text-center max-w-lg mx-auto border border-white/5 my-10">
-                <Heart className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <h3 className="text-lg font-mono font-bold text-white mb-2 uppercase">Danh sách trống</h3>
-                <p className="text-xs text-gray-400 font-mono">
-                  Bạn chưa có từ vựng yêu thích nào. Hãy chuyển sang tab "Duyệt Từ Vựng" và click vào biểu tượng trái tim ❤️ ở các thẻ từ để thêm vào đây nhé!
+              <div className="card-3d p-10 text-center max-w-lg mx-auto bg-[var(--color-surface)]">
+                <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-base font-black text-[var(--color-text)] mb-2 uppercase">Chưa có từ yêu thích</h3>
+                <p className="text-xs text-[var(--color-text-muted)] font-medium">
+                  Hãy chuyển sang tab "Duyệt từ điển" và click vào biểu tượng trái tim ❤️ ở các thẻ từ vựng để lưu vào đây nhé!
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {favoriteWordsList.map((w) => {
                   const cfg = getThemeConfig(w.theme);
                   return (
@@ -1350,25 +1418,25 @@ const Vocabulary = () => {
                       key={w.id}
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="glass-panel p-4 rounded-xl border border-white/8 hover:border-white/20 transition-all duration-200 group relative overflow-hidden"
-                      onMouseEnter={(e) => e.currentTarget.style.boxShadow = `0 0 20px ${cfg.color}15`}
-                      onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+                      className="card-3d p-4 bg-[var(--color-surface)] hover:-translate-y-1 transition-transform relative overflow-hidden flex flex-col justify-between"
                     >
-                      <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(to right, ${cfg.color}, transparent)` }} />
-                      <div className="flex justify-between items-start mb-3">
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full uppercase" style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}40` }}>
-                          {w.theme}
-                        </span>
-                        <button onClick={() => handleToggleFav(w.id)}>
-                          <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-                        </button>
+                      <div>
+                        <div className="flex justify-between items-start mb-3">
+                          <span className="text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider" style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}30` }}>
+                            {w.theme}
+                          </span>
+                          <button onClick={() => handleToggleFav(w.id)} className="p-1 rounded-lg hover:bg-[var(--color-bg)] cursor-pointer">
+                            <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+                          </button>
+                        </div>
+                        <h3 className="text-lg font-black text-[var(--color-text)] mb-0.5">{w.word}</h3>
+                        <p className="text-xs font-bold font-mono text-[var(--color-primary)] mb-2">{w.ipa}</p>
+                        <p className="text-xs text-[var(--color-text-muted)] font-bold mb-4 line-clamp-2">{w.meaning}</p>
                       </div>
-                      <h3 className="text-xl font-black font-mono text-white mb-1">{w.word}</h3>
-                      <p className="text-xs font-mono mb-2" style={{ color: cfg.color }}>{w.ipa}</p>
-                      <p className="text-sm text-gray-400 mb-3 line-clamp-2">{w.meaning}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-gray-600 font-mono border border-white/10 px-2 py-0.5 rounded">{w.type}</span>
-                        <button onClick={() => speak(w.word)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: cfg.color }}>
+
+                      <div className="flex items-center justify-between border-t border-[var(--color-surface-border)] pt-3 mt-auto">
+                        <span className="text-[9px] text-[var(--color-text-muted)] font-black border border-[var(--color-surface-border)] bg-[var(--color-bg)] px-2 py-0.5 rounded-lg uppercase tracking-wider">{w.type}</span>
+                        <button onClick={() => speak(w.word)} className="p-1.5 rounded-xl border border-[var(--color-surface-border)] hover:bg-[var(--color-bg)] transition-colors cursor-pointer text-[var(--color-primary)]">
                           <Volume2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -1381,164 +1449,161 @@ const Vocabulary = () => {
         )}
       </AnimatePresence>
 
+      {/* ──═ DIALOG MODAL: THÊM TỪ VỰNG ══── */}
       <AnimatePresence>
         {showAddForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="glass-panel w-full max-w-lg p-6 relative flex flex-col gap-4 border border-[var(--color-primary)]/30 shadow-[0_0_30px_rgba(0,240,255,0.15)]"
+              className="card-3d w-full max-w-lg max-h-[90vh] p-6 relative flex flex-col gap-4 bg-[var(--color-surface)]"
             >
               <button
                 onClick={() => setShowAddForm(false)}
-                className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
+                className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer z-10"
               >
                 <X className="w-5 h-5" />
               </button>
-              
-              <div className="flex items-center gap-2 mb-2">
+
+              <div className="flex items-center gap-2 mb-1 shrink-0">
                 <Plus className="w-6 h-6 text-[var(--color-primary)]" />
-                <h3 className="text-xl font-bold font-mono uppercase tracking-widest text-[var(--color-primary)]">
-                  Thêm Từ Vựng Mới
+                <h3 className="text-lg font-black uppercase tracking-wider text-[var(--color-text)]">
+                  Thêm từ vựng mới
                 </h3>
               </div>
-              
-              <form onSubmit={handleFormSubmit} className="space-y-4 font-mono text-sm">
-                <div>
-                  <label className="block text-gray-400 mb-1">Từ vựng (Tiếng Anh) <span className="text-[var(--color-accent)]">*</span></label>
-                  <div className="flex gap-2">
+
+              <form onSubmit={handleFormSubmit} className="flex-1 flex flex-col min-h-0">
+                <div className="flex-1 overflow-y-auto space-y-4 text-xs font-bold pr-2 -mr-2 pb-2">
+                  <div>
+                    <label className="block text-[var(--color-text-muted)] mb-1 uppercase tracking-wider">Từ vựng (Tiếng Anh) <span className="text-red-500">*</span></label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ví dụ: Hacktivist"
+                        value={newWordData.word}
+                        onChange={(e) => setNewWordData({ ...newWordData, word: e.target.value })}
+                        className="flex-1 bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-xl p-2.5 text-[var(--color-text)] focus:border-[var(--color-primary)] outline-none transition-all"
+                      />
+                      <button
+                        type="button"
+                        disabled={searchingAPI}
+                        onClick={handleLookUp}
+                        className="btn-3d-secondary px-3 text-xs shrink-0 flex items-center gap-1"
+                      >
+                        {searchingAPI ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-3.5 h-3.5 text-[var(--color-primary)]" />
+                        )}
+                        <span>Dịch từ</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[var(--color-text-muted)] mb-1 uppercase tracking-wider">Phiên âm IPA <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ví dụ: /ˈhæk.tɪ.vɪst/"
+                        value={newWordData.ipa}
+                        onChange={(e) => setNewWordData({ ...newWordData, ipa: e.target.value })}
+                        className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-xl p-2.5 text-[var(--color-text)] focus:border-[var(--color-primary)] outline-none transition-all font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[var(--color-text-muted)] mb-1 uppercase tracking-wider">Loại từ <span className="text-red-500">*</span></label>
+                      <select
+                        value={newWordData.type}
+                        onChange={(e) => setNewWordData({ ...newWordData, type: e.target.value })}
+                        className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-xl p-2.5 text-[var(--color-text)] focus:border-[var(--color-primary)] outline-none transition-all"
+                      >
+                        <option value="noun">Danh từ (noun)</option>
+                        <option value="verb">Động từ (verb)</option>
+                        <option value="adj">Tính từ (adj)</option>
+                        <option value="adv">Trạng từ (adv)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[var(--color-text-muted)] mb-1 uppercase tracking-wider">Ý nghĩa (Tiếng Việt) <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Hacktivist"
-                      value={newWordData.word}
-                      onChange={(e) => setNewWordData({ ...newWordData, word: e.target.value })}
-                      className="flex-1 bg-black/60 border border-white/10 rounded-lg p-2.5 text-white focus:border-[var(--color-primary)] outline-none transition-all"
+                      placeholder="Ví dụ: Nhà hoạt động mạng, tin tặc xã hội"
+                      value={newWordData.meaning}
+                      onChange={(e) => setNewWordData({ ...newWordData, meaning: e.target.value })}
+                      className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-xl p-2.5 text-[var(--color-text)] focus:border-[var(--color-primary)] outline-none transition-all"
                     />
-                    <button
-                      type="button"
-                      disabled={searchingAPI}
-                      onClick={handleLookUp}
-                      className="btn-secondary px-4 py-2 text-xs font-mono border border-white/10 hover:border-[var(--color-primary)] transition-all rounded-lg flex items-center justify-center gap-1 shrink-0"
-                    >
-                      {searchingAPI ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Tra cứu...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-3.5 h-3.5 text-[var(--color-primary)]" /> Tra cứu
-                        </>
-                      )}
-                    </button>
                   </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3">
+
                   <div>
-                    <label className="block text-gray-400 mb-1">Phát âm IPA <span className="text-[var(--color-accent)]">*</span></label>
+                    <label className="block text-[var(--color-text-muted)] mb-1 uppercase tracking-wider">Chủ đề (Theme)</label>
                     <input
                       type="text"
-                      required
-                      placeholder="e.g. /ˈhæk.tɪ.vɪst/"
-                      value={newWordData.ipa}
-                      onChange={(e) => setNewWordData({ ...newWordData, ipa: e.target.value })}
-                      className="w-full bg-black/60 border border-white/10 rounded-lg p-2.5 text-white focus:border-[var(--color-primary)] outline-none transition-all"
+                      placeholder="Ví dụ: Tech, General, AI, Security..."
+                      value={newWordData.theme}
+                      onChange={(e) => setNewWordData({ ...newWordData, theme: e.target.value })}
+                      className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-xl p-2.5 text-[var(--color-text)] focus:border-[var(--color-primary)] outline-none transition-all"
                     />
                   </div>
+
                   <div>
-                    <label className="block text-gray-400 mb-1">Loại từ <span className="text-[var(--color-accent)]">*</span></label>
-                    <select
-                      value={newWordData.type}
-                      onChange={(e) => setNewWordData({ ...newWordData, type: e.target.value })}
-                      className="w-full bg-black/60 border border-white/10 rounded-lg p-2.5 text-white focus:border-[var(--color-primary)] outline-none transition-all"
-                    >
-                      <option value="noun">Danh từ (noun)</option>
-                      <option value="verb">Động từ (verb)</option>
-                      <option value="adj">Tính từ (adj)</option>
-                      <option value="adv">Trạng từ (adv)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-gray-400 mb-1">Ý nghĩa (Tiếng Việt) <span className="text-[var(--color-accent)]">*</span></label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Nhà hoạt động hack, hacker chính trị"
-                    value={newWordData.meaning}
-                    onChange={(e) => setNewWordData({ ...newWordData, meaning: e.target.value })}
-                    className="w-full bg-black/60 border border-white/10 rounded-lg p-2.5 text-white focus:border-[var(--color-primary)] outline-none transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-400 mb-1">Chủ đề (Theme)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Security, Tech, AI, Sci-Fi..."
-                    value={newWordData.theme}
-                    onChange={(e) => setNewWordData({ ...newWordData, theme: e.target.value })}
-                    className="w-full bg-black/60 border border-white/10 rounded-lg p-2.5 text-white focus:border-[var(--color-primary)] outline-none transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-400 mb-1">Ví dụ minh họa (Tiếng Anh)</label>
-                  <textarea
-                    rows="2"
-                    placeholder="e.g. The hacktivist group leaked files to expose corruption."
-                    value={newWordData.example}
-                    onChange={(e) => setNewWordData({ ...newWordData, example: e.target.value })}
-                    className="w-full bg-black/60 border border-white/10 rounded-lg p-2.5 text-white focus:border-[var(--color-primary)] outline-none transition-all resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-400 mb-1.5">Ảnh minh họa (Không bắt buộc)</label>
-                  <div className="flex gap-2 mb-2 bg-black/40 border border-white/5 p-1 rounded-lg w-fit text-xs font-mono">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImageSourceType('upload');
-                        setNewWordData((prev) => ({ ...prev, imageUrl: '' }));
-                      }}
-                      className={`px-3 py-1 rounded transition-all ${
-                        imageSourceType === 'upload'
-                          ? 'bg-[var(--color-primary)] text-black font-bold'
-                          : 'text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      Tải ảnh lên
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImageSourceType('url');
-                        setNewWordData((prev) => ({ ...prev, imageUrl: '' }));
-                      }}
-                      className={`px-3 py-1 rounded transition-all ${
-                        imageSourceType === 'url'
-                          ? 'bg-[var(--color-primary)] text-black font-bold'
-                          : 'text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      Dán URL
-                    </button>
+                    <label className="block text-[var(--color-text-muted)] mb-1 uppercase tracking-wider">Ví dụ minh họa (Tiếng Anh)</label>
+                    <textarea
+                      rows="2"
+                      placeholder="Ví dụ: He is a hacktivist who fights for internet freedom."
+                      value={newWordData.example}
+                      onChange={(e) => setNewWordData({ ...newWordData, example: e.target.value })}
+                      className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-xl p-2.5 text-[var(--color-text)] focus:border-[var(--color-primary)] outline-none transition-all resize-none"
+                    />
                   </div>
 
-                  {imageSourceType === 'upload' ? (
-                    <div className="flex flex-col gap-2">
+                  <div>
+                    <label className="block text-[var(--color-text-muted)] mb-1.5 uppercase tracking-wider">Ảnh minh họa (Không bắt buộc)</label>
+                    <div className="flex gap-2 mb-2 bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] p-1 rounded-xl w-fit">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImageSourceType('upload');
+                          setNewWordData((prev) => ({ ...prev, imageUrl: '' }));
+                        }}
+                        className={`px-3 py-1 rounded-lg transition-all text-[10px] uppercase font-black cursor-pointer ${imageSourceType === 'upload'
+                            ? 'bg-[var(--color-primary)] text-white shadow-sm'
+                            : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+                          }`}
+                      >
+                        Tải file lên
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImageSourceType('url');
+                          setNewWordData((prev) => ({ ...prev, imageUrl: '' }));
+                        }}
+                        className={`px-3 py-1 rounded-lg transition-all text-[10px] uppercase font-black cursor-pointer ${imageSourceType === 'url'
+                            ? 'bg-[var(--color-primary)] text-white shadow-sm'
+                            : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+                          }`}
+                      >
+                        Link ảnh
+                      </button>
+                    </div>
+
+                    {imageSourceType === 'upload' ? (
+                      <div className="flex flex-col gap-2">
                       <input
                         type="file"
                         accept="image/*"
                         onChange={handleImageFileChange}
-                        className="w-full bg-black/60 border border-white/10 rounded-lg p-2 text-white focus:border-[var(--color-primary)] outline-none transition-all text-xs file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[var(--color-primary)]/20 file:text-[var(--color-primary)] hover:file:bg-[var(--color-primary)]/30 file:cursor-pointer"
+                        className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-xl p-2 text-[var(--color-text)] text-xs file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:bg-[var(--color-primary)]/20 file:text-[var(--color-primary)] hover:file:bg-[var(--color-primary)]/30 file:cursor-pointer"
                       />
                       {newWordData.imageUrl && (
-                        <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-white/10 mt-1">
+                        <div className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-[var(--color-surface-border)] mt-1">
                           <img
                             src={newWordData.imageUrl}
                             alt="Preview"
@@ -1549,7 +1614,7 @@ const Vocabulary = () => {
                             onClick={() => setNewWordData((prev) => ({ ...prev, imageUrl: '' }))}
                             className="absolute top-1 right-1 bg-black/60 p-1 rounded-full text-white hover:text-red-500 transition-colors"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            <X className="w-3 h-3" />
                           </button>
                         </div>
                       )}
@@ -1560,26 +1625,26 @@ const Vocabulary = () => {
                       placeholder="e.g. https://images.unsplash.com/photo-..."
                       value={newWordData.imageUrl}
                       onChange={(e) => setNewWordData({ ...newWordData, imageUrl: e.target.value })}
-                      className="w-full bg-black/60 border border-white/10 rounded-lg p-2.5 text-white focus:border-[var(--color-primary)] outline-none transition-all"
+                      className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-xl p-2.5 text-[var(--color-text)] focus:border-[var(--color-primary)] outline-none transition-all"
                     />
                   )}
+                  </div>
                 </div>
 
-                <div className="flex gap-3 pt-2">
+                <div className="flex gap-3 pt-4 border-t border-[var(--color-surface-border)] shrink-0">
                   <button
                     type="button"
                     onClick={() => setShowAddForm(false)}
-                    className="flex-1 btn-secondary text-center py-2.5 uppercase tracking-wider"
+                    className="flex-1 btn-3d-secondary py-2.5"
                   >
                     Hủy
                   </button>
                   <button
                     type="submit"
                     disabled={formSubmitting}
-                    className="flex-1 btn-primary text-center py-2.5 uppercase tracking-wider"
-                    style={{ borderColor: 'var(--color-primary)', boxShadow: '0 0 10px rgba(0,240,255,0.15)' }}
+                    className="flex-1 btn-3d-primary py-2.5"
                   >
-                    {formSubmitting ? 'Đang tạo...' : 'Lưu lại'}
+                    {formSubmitting ? 'Đang lưu...' : 'Lưu lại'}
                   </button>
                 </div>
               </form>
@@ -1587,88 +1652,91 @@ const Vocabulary = () => {
           </div>
         )}
 
+        {/* ──═ DIALOG MODAL: AI SINH TỪ ══── */}
         {showAIThemeModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="glass-panel w-full max-w-lg p-6 relative flex flex-col gap-4 border border-[var(--color-primary)]/30 shadow-[0_0_30px_rgba(0,240,255,0.15)]"
+              className="card-3d w-full max-w-lg max-h-[90vh] p-6 relative flex flex-col gap-4 bg-[var(--color-surface)]"
             >
               <button
                 onClick={() => setShowAIThemeModal(false)}
-                className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors cursor-pointer"
+                className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer z-10"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-6 h-6 text-[var(--color-primary)] animate-pulse" />
-                <h3 className="text-xl font-bold font-mono uppercase tracking-widest text-[var(--color-primary)] text-glow">
-                  AI Sinh Từ Mới
-                </h3>
+              <div className="shrink-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="w-6 h-6 text-[var(--color-primary)] animate-pulse" />
+                  <h3 className="text-lg font-black uppercase tracking-wider text-[var(--color-text)]">
+                    Trí tuệ nhân tạo sinh từ mới
+                  </h3>
+                </div>
+
+                <p className="text-xs text-[var(--color-text-muted)] font-medium leading-relaxed">
+                  Gemini AI sẽ lập tức tạo ra 10 từ vựng tiếng Anh theo chủ đề được lựa chọn kèm theo câu ví dụ, phát âm IPA và các câu hỏi kiểm tra tương ứng.
+                </p>
               </div>
 
-              <p className="text-xs text-gray-400 font-mono leading-relaxed">
-                Gemini AI sẽ lập tức sinh ra 10 từ vựng tiếng Anh hoàn toàn mới và các câu hỏi trắc nghiệm tương ứng dựa trên chủ đề bạn đã chọn.
-              </p>
+              {/* Preset list */}
+              <div className="flex-1 overflow-y-auto space-y-4 pr-2 -mr-2 min-h-0 pb-2">
+                <div className="space-y-2.5">
+                  <span className="block text-[10px] font-black uppercase tracking-wider text-[var(--color-text-muted)]">Chủ đề gợi ý:</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[
+                      { id: 'Cyberpunk', label: 'Cyberpunk 🌐', color: '#0ea5e9' },
+                      { id: 'Sci-Fi', label: 'Sci-Fi 🚀', color: '#f59e0b' },
+                      { id: 'Tech', label: 'Tech ⚙️', color: '#3b82f6' },
+                      { id: 'Security', label: 'Security 🛡️', color: '#ef4444' },
+                      { id: 'Network', label: 'Network 📡', color: '#22c55e' },
+                      { id: 'AI', label: 'AI 🤖', color: '#a855f7' }
+                    ].map((preset) => {
+                      const isSelected = selectedAITheme === preset.id && !customAITheme;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedAITheme(preset.id);
+                            setCustomAITheme('');
+                          }}
+                          className={`px-3 py-2.5 rounded-xl border-2 text-xs font-bold transition-all text-left flex flex-col justify-between cursor-pointer ${isSelected
+                              ? 'bg-sky-50 dark:bg-sky-950/40 text-[var(--color-primary)] border-[var(--color-primary)] shadow-sm'
+                              : 'bg-[var(--color-bg)] border-[var(--color-surface-border)] text-[var(--color-text-muted)] hover:border-gray-300 dark:hover:border-slate-700'
+                            }`}
+                          style={{
+                            borderColor: isSelected ? preset.color : undefined,
+                          }}
+                        >
+                          <span className="truncate w-full">{preset.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-              {/* Grid of Preset themes */}
-              <div className="space-y-2">
-                <span className="block text-xs font-mono text-gray-400">Chọn chủ đề phổ biến:</span>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {[
-                    { id: 'Cyberpunk', label: 'Cyberpunk 🌐', color: '#00f0ff' },
-                    { id: 'Sci-Fi', label: 'Sci-Fi 🚀', color: '#f59e0b' },
-                    { id: 'Tech', label: 'Tech ⚙️', color: '#3b82f6' },
-                    { id: 'Security', label: 'Security 🛡️', color: '#ef4444' },
-                    { id: 'Network', label: 'Network 📡', color: '#22c55e' },
-                    { id: 'AI', label: 'AI 🤖', color: '#a855f7' }
-                  ].map((preset) => {
-                    const isSelected = selectedAITheme === preset.id && !customAITheme;
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedAITheme(preset.id);
-                          setCustomAITheme('');
-                        }}
-                        className={`px-3 py-2.5 rounded-lg border text-xs font-mono font-bold transition-all text-left flex flex-col justify-between cursor-pointer ${
-                          isSelected
-                            ? 'bg-black/80 text-white shadow-[0_0_15px_rgba(255,255,255,0.05)] border-[var(--color-primary)]'
-                            : 'bg-black/30 border-white/5 text-gray-400 hover:border-white/20 hover:text-white'
-                        }`}
-                        style={{
-                          borderColor: isSelected ? preset.color : undefined,
-                          boxShadow: isSelected ? `0 0 10px ${preset.color}30` : undefined
-                        }}
-                      >
-                        <span className="truncate w-full">{preset.label}</span>
-                      </button>
-                    );
-                  })}
+                {/* Custom Input */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-[var(--color-text-muted)]">Hoặc tự điền chủ đề theo ý muốn:</label>
+                  <input
+                    type="text"
+                    placeholder="Ví dụ: Space Travel, Animals, Cooking, Job Interview..."
+                    value={customAITheme}
+                    onChange={(e) => setCustomAITheme(e.target.value)}
+                    className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-xl p-2.5 text-[var(--color-text)] focus:border-[var(--color-primary)] outline-none transition-all font-bold text-xs"
+                  />
                 </div>
               </div>
 
-              {/* Custom Theme input */}
-              <div className="space-y-1">
-                <label className="block text-xs font-mono text-gray-400">Hoặc tự nhập chủ đề tùy chỉnh:</label>
-                <input
-                  type="text"
-                  placeholder="Ví dụ: Space Travel, Hacking, Medicine, Animals..."
-                  value={customAITheme}
-                  onChange={(e) => setCustomAITheme(e.target.value)}
-                  className="w-full bg-black/60 border border-white/10 rounded-lg p-2.5 text-white font-mono text-xs focus:border-[var(--color-primary)] outline-none transition-all"
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-2">
+              {/* Actions */}
+              <div className="flex gap-3 pt-4 border-t border-[var(--color-surface-border)] shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowAIThemeModal(false)}
-                  className="flex-1 btn-secondary text-center py-2.5 uppercase tracking-wider text-xs cursor-pointer"
+                  className="flex-1 btn-3d-secondary py-2.5"
                 >
                   Hủy
                 </button>
@@ -1679,8 +1747,7 @@ const Vocabulary = () => {
                     const finalTheme = customAITheme.trim() || selectedAITheme;
                     await handleAIGenerate(finalTheme);
                   }}
-                  className="flex-1 btn-primary text-center py-2.5 uppercase tracking-wider text-xs cursor-pointer"
-                  style={{ borderColor: 'var(--color-accent)', boxShadow: '0 0 10px rgba(252,238,10,0.15)' }}
+                  className="flex-1 btn-3d-primary py-2.5"
                 >
                   Bắt đầu sinh
                 </button>
