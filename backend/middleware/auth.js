@@ -21,4 +21,17 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+const optionalAuth = async (req, res, next) => {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    try {
+      const token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'cyberlingo-secret-key');
+      req.user = await User.findByPk(decoded.id, { attributes: { exclude: ['password'] } });
+    } catch {
+      /* ignore invalid token — route remains public */
+    }
+  }
+  next();
+};
+
+module.exports = { protect, optionalAuth };

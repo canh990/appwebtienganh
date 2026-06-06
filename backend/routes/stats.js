@@ -37,7 +37,7 @@ router.get('/me', protect, async (req, res) => {
 router.get('/leaderboard', async (req, res) => {
   try {
     const users = await User.findAll({
-      attributes: ['id', 'username', 'xp', 'level', 'streak'],
+      attributes: ['id', 'username', 'xp', 'level', 'streak', 'avatar'],
       order: [['xp', 'DESC']],
       limit: 10
     });

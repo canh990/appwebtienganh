@@ -2,12 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Vocabulary = require('../models/Vocabulary');
 const User = require('../models/User');
-const { protect } = require('../middleware/auth');
+const { protect, optionalAuth } = require('../middleware/auth');
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
 
-// GET /api/vocabulary/themes — list unique themes with word count
-router.get('/themes', async (req, res) => {
+// GET /api/vocabulary/themes — list unique themes with word count (+ learned count if logged in)
+router.get('/themes', optionalAuth, async (req, res) => {
   try {
     const themes = await Vocabulary.findAll({
       attributes: [
@@ -17,7 +17,27 @@ router.get('/themes', async (req, res) => {
       group: ['theme'],
       order: [[sequelize.fn('COUNT', sequelize.col('id')), 'DESC']]
     });
-    res.json(themes.map(t => ({ theme: t.theme, count: parseInt(t.dataValues.count) })));
+
+    const learnedByTheme = {};
+    if (req.user) {
+      const learnedIds = req.user.wordsLearned || [];
+      if (learnedIds.length > 0) {
+        const learnedWords = await Vocabulary.findAll({
+          where: { id: learnedIds },
+          attributes: ['theme'],
+          raw: true,
+        });
+        learnedWords.forEach(({ theme }) => {
+          learnedByTheme[theme] = (learnedByTheme[theme] || 0) + 1;
+        });
+      }
+    }
+
+    res.json(themes.map(t => ({
+      theme: t.theme,
+      count: parseInt(t.dataValues.count),
+      learnedCount: learnedByTheme[t.theme] || 0,
+    })));
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi lấy danh sách chủ đề', error: error.message });
   }
@@ -84,6 +104,45 @@ router.post('/favorite/:id', protect, async (req, res) => {
   }
 });
 
+// GET /api/vocabulary/learned — get learned word IDs of the logged-in user (protected)
+router.get('/learned', protect, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+
+    const learned = Array.isArray(user.wordsLearned) ? user.wordsLearned : [];
+    res.json({ wordsLearned: learned });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi lấy danh sách từ đã học', error: error.message });
+  }
+});
+
+// POST /api/vocabulary/learned/:id — mark a word as learned (protected)
+router.post('/learned/:id', protect, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+
+    const wordIdStr = req.params.id.toString();
+    const word = await Vocabulary.findByPk(wordIdStr);
+    if (!word) return res.status(404).json({ message: 'Không tìm thấy từ vựng' });
+
+    let learned = Array.isArray(user.wordsLearned) ? user.wordsLearned : [];
+    const alreadyLearned = learned.some(id => id.toString() === wordIdStr);
+
+    if (!alreadyLearned) {
+      learned.push(parseInt(wordIdStr) || wordIdStr);
+      user.wordsLearned = learned;
+      user.changed('wordsLearned', true);
+      await user.save();
+    }
+
+    res.json({ wordsLearned: user.wordsLearned, added: !alreadyLearned });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi lưu tiến độ học', error: error.message });
+  }
+});
+
 // GET /api/vocabulary/favorites — get all favorite words of the logged-in user (protected)
 router.get('/favorites', protect, async (req, res) => {
   try {
@@ -105,6 +164,56 @@ router.get('/favorites', protect, async (req, res) => {
     res.json(words);
   } catch (error) {
     res.status(500).json({ message: 'Lỗi khi lấy danh sách từ vựng yêu thích', error: error.message });
+  }
+});
+
+// PUT /api/vocabulary/:id — update a vocabulary word (protected)
+router.put('/:id', protect, async (req, res) => {
+  try {
+    const word = await Vocabulary.findByPk(req.params.id);
+    if (!word) return res.status(404).json({ message: 'Không tìm thấy từ vựng' });
+
+    const { word: wordText, ipa, meaning, type, example, theme, imageUrl } = req.body;
+    if (!wordText || !ipa || !meaning || !type) {
+      return res.status(400).json({ message: 'Vui lòng điền đầy đủ các thông tin bắt buộc (Từ, IPA, Nghĩa, Loại từ)' });
+    }
+
+    const duplicate = await Vocabulary.findOne({
+      where: {
+        word: wordText.trim(),
+        id: { [Op.ne]: word.id },
+      },
+    });
+    if (duplicate) {
+      return res.status(400).json({ message: 'Từ vựng này đã tồn tại trong cơ sở dữ liệu.' });
+    }
+
+    await word.update({
+      word: wordText.trim(),
+      ipa: ipa.trim(),
+      meaning: meaning.trim(),
+      type: type.toLowerCase().trim(),
+      example: example ? example.trim() : '',
+      theme: theme ? theme.trim() : 'General',
+      imageUrl: imageUrl ? imageUrl.trim() : word.imageUrl,
+    });
+
+    res.json({ message: 'Cập nhật từ vựng thành công!', word });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi cập nhật từ vựng', error: error.message });
+  }
+});
+
+// DELETE /api/vocabulary/:id — delete a vocabulary word (protected)
+router.delete('/:id', protect, async (req, res) => {
+  try {
+    const word = await Vocabulary.findByPk(req.params.id);
+    if (!word) return res.status(404).json({ message: 'Không tìm thấy từ vựng' });
+
+    await word.destroy();
+    res.json({ message: 'Đã xóa từ vựng thành công!' });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi xóa từ vựng', error: error.message });
   }
 });
 

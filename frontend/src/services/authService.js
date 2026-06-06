@@ -15,6 +15,11 @@ export const getProfile = async () => {
   return response.data;
 };
 
+export const updateProfile = async (profileData) => {
+  const response = await api.put('/auth/profile', profileData);
+  return response.data;
+};
+
 export const refreshAccessToken = async (refreshToken) => {
   const response = await api.post('/auth/refresh', { token: refreshToken });
   return response.data;

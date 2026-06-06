@@ -27,3 +27,23 @@ export const getFavoriteVocabulary = async () => {
   const response = await api.get('/vocabulary/favorites');
   return response.data;
 };
+
+export const getLearnedWordIds = async () => {
+  const response = await api.get('/vocabulary/learned');
+  return response.data.wordsLearned;
+};
+
+export const markWordLearned = async (wordId) => {
+  const response = await api.post(`/vocabulary/learned/${wordId}`);
+  return response.data;
+};
+
+export const updateVocabulary = async (wordId, wordData) => {
+  const response = await api.put(`/vocabulary/${wordId}`, wordData);
+  return response.data;
+};
+
+export const deleteVocabulary = async (wordId) => {
+  const response = await api.delete(`/vocabulary/${wordId}`);
+  return response.data;
+};
