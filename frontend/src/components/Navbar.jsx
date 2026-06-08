@@ -153,15 +153,15 @@ const Navbar = () => {
   return (
     <>
       {/* ── Desktop / Top Bar ── */}
-      <div className="sticky top-0 z-50 w-full bg-[var(--color-surface)] border-b-2 border-[var(--color-surface-border)] px-4 py-2">
-        <nav className="mx-auto max-w-7xl px-2 py-1 flex justify-between items-center">
+      <div className="sticky top-0 z-50 w-full bg-[var(--color-surface)] border-b-2 border-[var(--color-surface-border)] px-2 sm:px-4 py-2">
+        <nav className="mx-auto max-w-7xl px-1 sm:px-2 py-1 flex justify-between items-center">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-            <div className="p-2 rounded-xl bg-sky-100 dark:bg-sky-950 text-[var(--color-primary)] group-hover:scale-110 transition-transform duration-300">
-              <Sparkles className="w-5 h-5 fill-current" />
+          <Link to="/" className="flex items-center gap-1.5 sm:gap-2.5 group shrink-0">
+            <div className="p-1.5 sm:p-2 rounded-xl bg-sky-100 dark:bg-sky-950 text-[var(--color-primary)] group-hover:scale-110 transition-transform duration-300">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
             </div>
-            <span className="text-2xl font-black tracking-tight text-[var(--color-primary)]">
+            <span className="text-lg sm:text-2xl font-black tracking-tight text-[var(--color-primary)]">
               CyberLingo
             </span>
           </Link>
@@ -195,20 +195,20 @@ const Navbar = () => {
           </div>
 
           {/* Right actions */}
-          <div className="flex gap-2 items-center shrink-0">
+          <div className="flex gap-1 sm:gap-2 items-center shrink-0">
             {/* Dark mode toggle */}
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
 
-            <div className="w-px h-6 bg-[var(--color-surface-border)] mx-1" />
+            <div className="w-px h-6 bg-[var(--color-surface-border)] mx-0.5 sm:mx-1" />
 
             {user ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 {/* Avatar + username */}
                 <Link
                   to="/profile"
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-[var(--color-bg)] transition-all duration-200 group"
+                  className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2.5 py-1.5 rounded-xl hover:bg-[var(--color-bg)] transition-all duration-200 group"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] flex items-center justify-center shadow-sm overflow-hidden border border-[var(--color-surface-border)]">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-secondary)] flex items-center justify-center shadow-sm overflow-hidden border border-[var(--color-surface-border)]">
                     {user.avatar && user.avatar !== 'default_cyber_avatar.png' ? (
                       <img src={user.avatar} className="w-full h-full object-cover" alt="avatar" />
                     ) : (
@@ -225,15 +225,15 @@ const Navbar = () => {
                 {/* Logout */}
                 <button
                   onClick={handleLogout}
-                  className="p-2.5 rounded-xl text-gray-400 hover:text-[var(--color-danger)] hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200 cursor-pointer"
+                  className="p-2 sm:p-2.5 rounded-xl text-gray-400 hover:text-[var(--color-danger)] hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200 cursor-pointer"
                   title="Đăng xuất"
                 >
-                  <LogOut className="w-5 h-5" />
+                  <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             ) : (
-              <Link to="/auth">
-                <button className="btn-3d-primary py-2 px-4 text-xs rounded-xl">Đăng nhập</button>
+              <Link to="/auth" className="shrink-0">
+                <button className="btn-3d-primary py-1.5 px-2.5 sm:py-2 sm:px-4 text-[10px] sm:text-xs rounded-xl">Đăng nhập</button>
               </Link>
             )}
           </div>
