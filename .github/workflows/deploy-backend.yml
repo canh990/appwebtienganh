@@ -1,7 +1,7 @@
 name: Deploy Backend to Railway
 on:
   push:
-    branches: [ 'main' ]
+    branches: [ 'main', 'master' ]
 
 jobs:
   deploy-backend:
