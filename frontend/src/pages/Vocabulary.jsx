@@ -276,6 +276,22 @@ const StudySession = ({ theme, themeColor, onExit, favorites, onToggleFav, learn
     }
   };
 
+  /* ── Keyboard shortcut for Continue (Enter key) ── */
+  const nextQuizRef = useRef(nextQuiz);
+  useEffect(() => { nextQuizRef.current = nextQuiz; }, [nextQuiz]);
+
+  useEffect(() => {
+    if (mode !== 'quiz' || !quizAnswered || quizDone) return;
+    const handleEnterKey = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        nextQuizRef.current?.();
+      }
+    };
+    window.addEventListener('keydown', handleEnterKey);
+    return () => window.removeEventListener('keydown', handleEnterKey);
+  }, [mode, quizAnswered, quizDone]);
+
   /* Persist quiz results to backend when done */
   const { updateUser: updateAuthUser, user: authUser } = useAuth();
 

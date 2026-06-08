@@ -815,6 +815,27 @@ const Quiz = () => {
   const isCorrectAnswer = currentAnswerObj?.correct;
   const isOutOfLives = gameMode === 'survival' && (lives === 0 || (!isCorrectAnswer && lives === 1 && isAnswered));
 
+  /* ── Keyboard shortcut for Continue (Enter key) ── */
+  const nextQuestionRef = useRef(nextQuestion);
+  const endQuizEarlyRef = useRef(endQuizEarly);
+  useEffect(() => { nextQuestionRef.current = nextQuestion; }, [nextQuestion]);
+  useEffect(() => { endQuizEarlyRef.current = endQuizEarly; }, [endQuizEarly]);
+
+  useEffect(() => {
+    const handleEnterKey = (e) => {
+      if (e.key === 'Enter' && isAnswered && !showResult) {
+        e.preventDefault();
+        if (isOutOfLives) {
+          endQuizEarlyRef.current?.();
+        } else {
+          nextQuestionRef.current?.();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleEnterKey);
+    return () => window.removeEventListener('keydown', handleEnterKey);
+  }, [isAnswered, isOutOfLives, showResult]);
+
   const getCorrectAnswerText = () => {
     if (!q) return '';
     if (q.type === 'multiple_choice') return options[q.answerIndex] || '';
