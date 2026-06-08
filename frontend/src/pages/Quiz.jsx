@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CheckCircle2, XCircle, Loader2, Database, Volume2,
+  CheckCircle2, XCircle, Loader2, Volume2,
   Sparkles, Trophy, Brain, RotateCcw, ChevronRight, Clock,
   Headphones, PenLine, ListChecks, Zap, Heart, X, Play,
   Globe, ChevronLeft, BookOpen, Layers
 } from 'lucide-react';
 import { getRandomQuiz, submitQuiz, getQuizThemes } from '../services/quizService';
-import { seedDatabase, generateAIWords } from '../services/seedService';
+import { generateAIWords } from '../services/seedService';
 import { getThemes } from '../services/vocabularyService';
 import { useTimer } from '../hooks/useTimer';
 import { pageVariants } from '../animations/variants';
@@ -351,7 +351,7 @@ const ResultScreen = ({ score, total, answers, questions, onRestart, selectedThe
 };
 
 /* ── Theme Lobby ─────────────────────────────────────────────────────────── */
-const ThemeLobby = ({ quizThemes, vocabThemes, onStart, onSeed, onAIGenerate, seeding, aiLoading, user, loadingThemes, historyList }) => {
+const ThemeLobby = ({ quizThemes, vocabThemes, onStart, onAIGenerate, aiLoading, user, loadingThemes, historyList }) => {
   const allThemes = quizThemes.length > 0 ? quizThemes : [];
   const hasThemes = allThemes.length > 0;
 
@@ -467,25 +467,17 @@ const ThemeLobby = ({ quizThemes, vocabThemes, onStart, onSeed, onAIGenerate, se
         <p className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-muted)] mb-3">
           Thêm câu hỏi mới
         </p>
-        <div className="flex gap-3">
+        <div>
           <button
             onClick={() => {
               if (!user) return toast.error('Bạn cần đăng nhập để sinh đề!');
               onAIGenerate();
             }}
             disabled={aiLoading}
-            className="flex-1 btn-3d-primary flex items-center justify-center gap-2 py-2.5 text-xs"
+            className="w-full btn-3d-primary flex items-center justify-center gap-2 py-2.5 text-xs"
           >
             {aiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
             AI sinh đề
-          </button>
-          <button
-            onClick={onSeed}
-            disabled={seeding}
-            className="flex-1 btn-3d-secondary flex items-center justify-center gap-2 py-2.5 text-xs"
-          >
-            {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5 text-[var(--color-primary)]" />}
-            Reset mẫu
           </button>
         </div>
       </div>
@@ -513,7 +505,6 @@ const Quiz = () => {
   const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [seeding, setSeeding] = useState(false);
   const [streak, setStreak] = useState(0);
   const [loadingThemes, setLoadingThemes] = useState(true);
 
@@ -671,21 +662,6 @@ const Quiz = () => {
     }
   };
 
-  /* ── Seed ── */
-  const handleSeed = async () => {
-    setSeeding(true);
-    try {
-      const data = await seedDatabase();
-      toast.success(data.message || 'Khởi tạo dữ liệu thành công!');
-      setError(null);
-      await Promise.all([fetchQuizThemes(), fetchVocabThemes()]);
-      if (selectedTheme !== null) goToLobby();
-    } catch {
-      toast.error('Lỗi khi khởi tạo dữ liệu mẫu.');
-    } finally {
-      setSeeding(false);
-    }
-  };
 
   /* ── Auto-play for listening questions ── */
   useEffect(() => {
@@ -863,13 +839,11 @@ const Quiz = () => {
               onStart={(theme) => {
                 setSetupTheme(theme);
               }}
-              onSeed={handleSeed}
               onAIGenerate={() => {
                 setSelectedAITheme('Cyberpunk');
                 setCustomAITheme('');
                 setShowAIThemeModal(true);
               }}
-              seeding={seeding}
               aiLoading={aiLoading}
               user={user}
               loadingThemes={loadingThemes}
@@ -895,13 +869,9 @@ const Quiz = () => {
           >
             <Brain className="w-16 h-16 text-[var(--color-secondary)] opacity-40 mx-auto animate-pulse" />
             <p className="text-[var(--color-secondary)] font-bold text-base">{error}</p>
-            <div className="flex gap-3 justify-center">
-              <button onClick={goToLobby} className="btn-3d-secondary flex items-center gap-2">
+            <div className="flex justify-center">
+              <button onClick={goToLobby} className="btn-3d-primary flex items-center gap-2">
                 <ChevronLeft className="w-4 h-4" /> Quay lại
-              </button>
-              <button onClick={handleSeed} disabled={seeding} className="btn-3d-primary flex items-center gap-2">
-                {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
-                Khởi tạo mẫu
               </button>
             </div>
           </motion.div>

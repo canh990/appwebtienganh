@@ -2,12 +2,12 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Volume2, ChevronRight, ChevronLeft, Search, Loader2,
-  Heart, Database, Sparkles, Grid3X3, Layers, X, BookOpen,
+  Heart, Sparkles, Grid3X3, Layers, X, BookOpen,
   GraduationCap, ArrowLeft, CheckCircle, Target, Zap,
   RotateCcw, Plus, Pencil, Trash2, Brain
 } from 'lucide-react';
 import { getVocabulary, getThemes, toggleFavoriteWord, createVocabulary, updateVocabulary, deleteVocabulary, getFavoriteVocabulary, getLearnedWordIds, markWordLearned } from '../services/vocabularyService';
-import { seedDatabase, generateAIWords } from '../services/seedService';
+import { generateAIWords } from '../services/seedService';
 import { submitQuiz } from '../services/quizService';
 import { getMyStats } from '../services/statsService';
 import { pageVariants } from '../animations/variants';
@@ -857,7 +857,6 @@ const Vocabulary = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [favorites, setFavorites] = useState([]);
-  const [seeding, setSeeding] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [studyTheme, setStudyTheme] = useState(null);
   const [studyThemeColor, setStudyThemeColor] = useState('#1cb0f6');
@@ -984,16 +983,6 @@ const Vocabulary = () => {
     fetchThemes();
   }, [fetchThemes]);
 
-  const handleSeed = async () => {
-    setSeeding(true);
-    try {
-      const data = await seedDatabase();
-      toast.success(data.message || 'Khởi tạo dữ liệu thành công!');
-      setError(null);
-      await Promise.all([fetchWords(1, false, selectedThemeFilter, searchTerm), fetchThemes()]);
-    } catch { toast.error('Lỗi khi khởi tạo dữ liệu.'); }
-    finally { setSeeding(false); }
-  };
 
   const handleAIGenerate = async (theme = 'Cyberpunk') => {
     setAiLoading(true);
@@ -1252,9 +1241,6 @@ const Vocabulary = () => {
       <BookOpen className="w-16 h-16 text-[var(--color-secondary)] opacity-50 mx-auto" />
       <p className="text-[var(--color-secondary)] font-bold text-lg">{error}</p>
       <div className="flex gap-4">
-        <button onClick={handleSeed} disabled={seeding} className="btn-3d-primary flex items-center gap-2 px-6 py-3">
-          {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />} Khởi tạo mẫu
-        </button>
         <button
           onClick={() => {
             if (!user) return toast.error('Bạn cần đăng nhập để sinh từ vựng!');
@@ -1263,7 +1249,7 @@ const Vocabulary = () => {
             setShowAIThemeModal(true);
           }}
           disabled={aiLoading}
-          className="btn-3d-secondary flex items-center gap-2 px-6 py-3"
+          className="btn-3d-primary flex items-center gap-2 px-6 py-3"
         >
           {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} AI Sinh Từ Mới
         </button>
@@ -1291,16 +1277,6 @@ const Vocabulary = () => {
             className="btn-3d-secondary flex items-center gap-1.5 px-4 py-2.5 text-xs"
           >
             <Plus className="w-4 h-4 text-[var(--color-primary)]" /> Thêm từ mới
-          </button>
-          <button
-            onClick={handleSeed}
-            disabled={seeding}
-            className="btn-3d-secondary flex items-center gap-1.5 px-4 py-2.5 text-xs"
-          >
-            {seeding
-              ? <><Loader2 className="w-4 h-4 animate-spin" /> Đang Reset...</>
-              : <><Database className="w-4 h-4 text-[var(--color-primary)]" /> Reset dữ liệu</>
-            }
           </button>
           <button
             onClick={() => {
@@ -1427,16 +1403,9 @@ const Vocabulary = () => {
                 <BookOpen className="w-12 h-12 text-[var(--color-primary)] opacity-40 mx-auto mb-4" />
                 <h3 className="text-lg font-black text-[var(--color-text)] mb-2 uppercase">Kho từ vựng chưa được tạo</h3>
                 <p className="text-xs text-[var(--color-text-muted)] mb-6 font-medium max-w-md mx-auto leading-relaxed">
-                  Hiện bạn chưa có từ vựng nào. Hãy bấm nạp dữ liệu mẫu hoặc sử dụng Gemini AI tự sinh từ vựng để bắt đầu học nhé!
+                  Hiện bạn chưa có từ vựng nào. Hãy sử dụng Gemini AI tự sinh từ vựng để bắt đầu học nhé!
                 </p>
-                <div className="flex gap-4 justify-center">
-                  <button
-                    onClick={handleSeed}
-                    disabled={seeding}
-                    className="btn-3d-secondary flex items-center gap-2 px-5 py-2.5 text-xs"
-                  >
-                    {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />} Khởi tạo mẫu
-                  </button>
+                <div className="flex justify-center">
                   <button
                     onClick={() => {
                       if (!user) return toast.error('Bạn cần đăng nhập để sinh từ vựng!');
