@@ -2,19 +2,22 @@ const express = require('express');
 const router = express.Router();
 const Quiz = require('../models/Quiz');
 const User = require('../models/User');
-const { protect } = require('../middleware/auth');
+const { protect, optionalAuth } = require('../middleware/auth');
 const sequelize = require('../config/database');
 const { Op } = require('sequelize');
 
 // Get available quiz themes
-router.get('/themes', async (req, res) => {
+router.get('/themes', optionalAuth, async (req, res) => {
   try {
     const results = await Quiz.findAll({
       attributes: [
         'theme',
         [sequelize.fn('COUNT', sequelize.col('id')), 'count']
       ],
-      where: { theme: { [Op.not]: null } },
+      where: { 
+        theme: { [Op.not]: null },
+        userId: { [Op.or]: [null, req.user ? req.user.id : null] }
+      },
       group: ['theme'],
       order: [[sequelize.fn('COUNT', sequelize.col('id')), 'DESC']]
     });
@@ -25,13 +28,15 @@ router.get('/themes', async (req, res) => {
 });
 
 // Get random quizzes with optional filters: ?limit=10&type=multiple_choice&theme=Tech
-router.get('/random', async (req, res) => {
+router.get('/random', optionalAuth, async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 10, 30);
     const type = req.query.type;
     const theme = req.query.theme;
 
-    const where = {};
+    const where = {
+      userId: { [Op.or]: [null, req.user ? req.user.id : null] }
+    };
     if (type && type !== 'all') where.type = type;
     if (theme && theme !== 'all') where.theme = theme;
 

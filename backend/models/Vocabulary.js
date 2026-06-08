@@ -7,10 +7,13 @@ const Vocabulary = sequelize.define('Vocabulary', {
     primaryKey: true,
     autoIncrement: true
   },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
   word: {
     type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
+    allowNull: false
   },
   ipa: {
     type: DataTypes.STRING,

@@ -3,6 +3,8 @@ const router = express.Router();
 const { generateWithFallback } = require('../utils/geminiClient');
 const Vocabulary = require('../models/Vocabulary');
 const Quiz = require('../models/Quiz');
+const { protect } = require('../middleware/auth');
+const { Op } = require('sequelize');
 
 router.post('/', async (req, res) => {
   try {
@@ -247,7 +249,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.post('/ai-generate', async (req, res) => {
+router.post('/ai-generate', protect, async (req, res) => {
   const { theme } = req.body;
   const targetTheme = theme ? theme.trim() : 'Cyberpunk';
 
@@ -305,12 +307,13 @@ Return ONLY the JSON object. No markdown, no triple backticks.`;
     // Tìm các từ vựng đã tồn tại bằng Sequelize
     const existingWords = await Vocabulary.findAll({ 
       where: {
-        word: wordList.map(w => w.word)
+        word: wordList.map(w => w.word),
+        userId: { [Op.or]: [null, req.user.id] }
       }
     });
     
     const existingWordNames = new Set(existingWords.map(w => w.word.toLowerCase()));
-    const newWords = wordList.filter(w => !existingWordNames.has(w.word.toLowerCase()));
+    const newWords = wordList.filter(w => !existingWordNames.has(w.word.toLowerCase())).map(w => ({ ...w, userId: req.user.id }));
 
     let wordsAdded = 0;
     if (newWords.length > 0) {
@@ -320,7 +323,7 @@ Return ONLY the JSON object. No markdown, no triple backticks.`;
 
     let quizzesAdded = 0;
     if (data.quizzes && data.quizzes.length > 0) {
-      const quizzesWithTheme = data.quizzes.map(q => ({ ...q, theme: q.theme || targetTheme }));
+      const quizzesWithTheme = data.quizzes.map(q => ({ ...q, theme: q.theme || targetTheme, userId: req.user.id }));
       const insertedQuizzes = await Quiz.bulkCreate(quizzesWithTheme);
       quizzesAdded = insertedQuizzes.length;
     }

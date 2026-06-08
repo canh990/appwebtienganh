@@ -41,17 +41,17 @@ const StatCard = ({ label, value, icon, color, delay = 0 }) => (
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay, duration: 0.4 }}
-    className="card-3d p-5 flex items-center gap-4 cursor-default bg-[var(--color-surface)] hover:-translate-y-1 transition-transform"
+    className="card-3d p-3 sm:p-5 flex items-center gap-2.5 sm:gap-4 cursor-default bg-[var(--color-surface)] hover:-translate-y-1 transition-transform min-w-0"
   >
     <div
-      className="p-3.5 rounded-2xl shrink-0 shadow-md text-white font-bold"
+      className="p-2 sm:p-3.5 rounded-xl sm:rounded-2xl shrink-0 shadow-md text-white font-bold flex items-center justify-center"
       style={{ backgroundColor: color }}
     >
       {icon}
     </div>
-    <div>
-      <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">{label}</p>
-      <p className="text-2xl font-black text-[var(--color-text)] mt-0.5">{value}</p>
+    <div className="min-w-0 flex-1">
+      <p className="text-[10px] sm:text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider truncate whitespace-nowrap">{label}</p>
+      <p className="text-base sm:text-2xl font-black text-[var(--color-text)] mt-0.5 whitespace-nowrap">{value}</p>
     </div>
   </motion.div>
 );
@@ -66,21 +66,21 @@ const LeaderboardRow = ({ user: u, rank, currentId }) => {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: rank * 0.05 }}
-      className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl border-2 transition-all duration-200 ${isMe
+      className={`flex items-center gap-3 md:gap-4 px-3.5 py-3 md:px-5 md:py-3.5 rounded-2xl border-2 transition-all duration-200 ${isMe
           ? 'border-[var(--color-primary)] bg-sky-50/50 dark:bg-sky-950/20 shadow-sm'
           : 'border-[var(--color-surface-border)] bg-[var(--color-surface)] hover:border-gray-300 dark:hover:border-slate-600'
         }`}
     >
-      <div className="w-8 flex justify-center shrink-0">
+      <div className="w-6 sm:w-8 flex justify-center shrink-0">
         {isTop3 ? (
-          <span className="text-2xl select-none">{RANK_MEDALS[rank - 1]}</span>
+          <span className="text-xl sm:text-2xl select-none">{RANK_MEDALS[rank - 1]}</span>
         ) : (
-          <span className="font-extrabold text-[var(--color-text-muted)] text-base">#{rank}</span>
+          <span className="font-extrabold text-[var(--color-text-muted)] text-sm sm:text-base">#{rank}</span>
         )}
       </div>
 
       {/* User avatar */}
-      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center font-bold text-sky-800 dark:text-sky-200 text-base shadow-sm overflow-hidden">
+      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center font-bold text-sky-800 dark:text-sky-200 text-sm sm:text-base shadow-sm overflow-hidden shrink-0">
         {u.avatar && u.avatar !== 'default_cyber_avatar.png' ? (
           <img src={u.avatar} className="w-full h-full object-cover" alt="avatar" />
         ) : (
@@ -89,20 +89,21 @@ const LeaderboardRow = ({ user: u, rank, currentId }) => {
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className={`font-black text-sm truncate flex items-center gap-1.5 ${isMe ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
-          {u.username}
-          {isMe && <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-md bg-[var(--color-primary)] text-white font-extrabold tracking-wider">Bạn</span>}
+        <p className={`font-black text-xs sm:text-sm truncate flex items-center gap-1.5 ${isMe ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'}`}>
+          <span className="truncate">{u.username}</span>
+          {isMe && <span className="text-[8px] uppercase px-1 py-0.5 rounded bg-[var(--color-primary)] text-white font-black tracking-wider shrink-0">Bạn</span>}
         </p>
-        <p className="text-xs font-bold text-[var(--color-text-muted)] flex items-center gap-1.5 mt-0.5">
-          <span>Cấp {u.level}</span>
-          <span className="w-1 h-1 rounded-full bg-[var(--color-surface-border)]" />
-          <span className="flex items-center text-orange-500 font-bold">
-            <Flame className="w-3.5 h-3.5 mr-0.5 fill-current" /> {u.streak} ngày
+        <p className="text-[10px] sm:text-xs font-bold text-[var(--color-text-muted)] flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5">
+          <span className="whitespace-nowrap">Cấp {u.level}</span>
+          <span className="w-1 h-1 rounded-full bg-[var(--color-surface-border)] shrink-0 hidden sm:inline" />
+          <span className="flex items-center text-orange-500 font-bold shrink-0">
+            <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 fill-current" />
+            <span className="whitespace-nowrap">{u.streak} ngày</span>
           </span>
         </p>
       </div>
 
-      <span className="font-black text-[var(--color-primary)] bg-sky-50 dark:bg-sky-950/40 px-3 py-1.5 rounded-xl text-sm border-2 border-transparent border-b-[var(--color-surface-border)]">
+      <span className="font-black text-[var(--color-primary)] bg-sky-50 dark:bg-sky-950/40 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-xs sm:text-sm border-2 border-transparent border-b-[var(--color-surface-border)] shrink-0">
         {u.xp} XP
       </span>
     </motion.div>
@@ -250,20 +251,20 @@ const Dashboard = () => {
 
   const statCards = [
     {
-      label: 'Chuỗi Ngày', value: `${stats?.streak ?? authUser?.streak ?? 0} ngày 🔥`,
-      icon: <Flame className="w-6 h-6 fill-current" />, color: '#ff9600'
+      label: 'Chuỗi Ngày', value: `${stats?.streak ?? authUser?.streak ?? 0} ngày`,
+      icon: <Flame className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />, color: '#ff9600'
     },
     {
       label: 'Từ Đã Học', value: stats ? `${stats.wordsLearned}/${stats.totalVocab}` : '—',
-      icon: <BookOpen className="w-6 h-6" />, color: '#1cb0f6'
+      icon: <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />, color: '#1cb0f6'
     },
     {
       label: 'Bài Kiểm Tra', value: stats?.stats?.totalQuizzesTaken ?? 0,
-      icon: <Brain className="w-6 h-6" />, color: '#b862f9'
+      icon: <Brain className="w-5 h-5 sm:w-6 sm:h-6" />, color: '#b862f9'
     },
     {
       label: 'Điểm Cao Nhất', value: stats?.stats?.highestScore ?? 0,
-      icon: <Star className="w-6 h-6 fill-current" />, color: '#ffc800'
+      icon: <Star className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />, color: '#ffc800'
     },
   ];
 

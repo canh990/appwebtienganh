@@ -3,47 +3,7 @@ import AIHelper from '../components/AIHelper';
 import { useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronUp } from 'lucide-react';
 
-/* ── Scroll to Top Button ─────────────────────────────────────────────── */
-const ScrollToTop = () => {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = document.getElementById('main-scroll-area');
-    if (!el) return;
-    const onScroll = () => setVisible(el.scrollTop > 300);
-    el.addEventListener('scroll', onScroll, { passive: true });
-    return () => el.removeEventListener('scroll', onScroll);
-  }, []);
-
-  const scrollUp = () => {
-    document.getElementById('main-scroll-area')?.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  return (
-    <AnimatePresence>
-      {visible && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0.7, y: 16 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.7, y: 16 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-          onClick={scrollUp}
-          aria-label="Scroll to top"
-          className="fixed bottom-[84px] md:bottom-6 right-5 z-40 w-11 h-11 rounded-2xl shadow-lg flex items-center justify-center cursor-pointer transition-all hover:scale-110 active:scale-95"
-          style={{
-            background: 'var(--color-primary)',
-            boxShadow: '0 4px 16px rgba(28,176,246,0.35)',
-            borderBottom: '3px solid var(--color-primary-hover)',
-          }}
-        >
-          <ChevronUp className="w-5 h-5 text-white" strokeWidth={2.5} />
-        </motion.button>
-      )}
-    </AnimatePresence>
-  );
-};
 
 /* ── Main Layout ──────────────────────────────────────────────────────── */
 const MainLayout = ({ children }) => {
@@ -91,7 +51,7 @@ const MainLayout = ({ children }) => {
         <div
           className={
             isChatRoute
-              ? 'flex-1 flex flex-col h-full'
+              ? 'flex-1 flex flex-col h-full pb-[60px] md:pb-0'
               : 'container mx-auto px-4 py-8 md:py-12 max-w-7xl pb-[88px] md:pb-12'
           }
         >
@@ -100,10 +60,7 @@ const MainLayout = ({ children }) => {
       </main>
 
       {!isChatRoute && (
-        <>
-          <AIHelper />
-          <ScrollToTop />
-        </>
+        <AIHelper />
       )}
     </div>
   );

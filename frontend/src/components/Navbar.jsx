@@ -203,16 +203,6 @@ const Navbar = () => {
 
             {user ? (
               <div className="flex items-center gap-2">
-                {/* Add vocab button — hidden on mobile (bottom nav handles nav) */}
-                <Link
-                  to="/vocabulary?add=true"
-                  className="hidden sm:flex btn-3d-primary py-2 px-3 text-xs rounded-xl items-center gap-1.5 font-black uppercase tracking-wider shrink-0"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span className="hidden md:inline">Thêm từ vựng</span>
-                  <span className="md:hidden">Thêm</span>
-                </Link>
-
                 {/* Avatar + username */}
                 <Link
                   to="/profile"

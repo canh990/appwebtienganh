@@ -177,30 +177,27 @@ const CommunityChat = () => {
       className="flex flex-1 w-full flex-col overflow-hidden bg-[var(--color-surface)]"
     >
       {/* ── Chat header ── */}
-      <div className="shrink-0 px-6 py-4 border-b-2 border-[var(--color-surface-border)] flex items-center justify-between bg-[var(--color-surface)] select-none">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-[#1cb0f6] border-2 border-[#1899d6] text-white shadow-sm">
-              <Users className="w-6 h-6" />
+      <div className="shrink-0 px-4 py-3 md:px-6 md:py-4 border-b-2 border-[var(--color-surface-border)] flex items-center justify-between bg-[var(--color-surface)] select-none">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <div className="relative shrink-0">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center bg-[#1cb0f6] border-2 border-[#1899d6] text-white shadow-sm">
+              <Users className="w-5 h-5 md:w-6 md:h-6" />
             </div>
-            {isConnected && (
-              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#58cc02] rounded-full border-2 border-[var(--color-surface)] animate-pulse" />
-            )}
           </div>
-          <div>
-            <h1 className="font-black text-lg text-[var(--color-text)] uppercase tracking-wider flex items-center gap-2">
+          <div className="min-w-0">
+            <h1 className="font-black text-sm sm:text-base text-[var(--color-text)] uppercase tracking-wider truncate whitespace-nowrap">
               Cộng Đồng <span className="text-[var(--color-primary)]">#Global</span>
             </h1>
-            <p className="text-xs text-[var(--color-text-muted)] font-bold flex items-center gap-1.5 mt-0.5">
-              <Activity className="w-3.5 h-3.5 text-[#58cc02]" />
-              {isConnected ? 'Đang trực tuyến' : 'Đang kết nối...'}
+            <p className="text-[10px] sm:text-xs text-[var(--color-text-muted)] font-bold flex items-center gap-1.5 mt-0.5 truncate whitespace-nowrap">
+              <Activity className="w-3.5 h-3.5 text-[#58cc02] shrink-0" />
+              <span>{isConnected ? 'Đang trực tuyến' : 'Đang kết nối...'}</span>
             </p>
           </div>
         </div>
 
-        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] shadow-sm">
-          <Sparkles className="w-4 h-4 text-[var(--color-primary)]" />
-          <span className="text-xs font-bold text-[var(--color-text)] uppercase tracking-wider">Giao tiếp lịch sự!</span>
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] shadow-sm shrink-0">
+          <Sparkles className="w-3.5 h-3.5 text-[var(--color-primary)]" />
+          <span className="text-[10px] font-bold text-[var(--color-text)] uppercase tracking-wider">Giao tiếp lịch sự!</span>
         </div>
       </div>
 
@@ -298,7 +295,7 @@ const CommunityChat = () => {
 
           {/* Gamified Input bar */}
           <div className="shrink-0 p-4 border-t-2 border-[var(--color-surface-border)] bg-[var(--color-surface)]">
-            <div className="flex gap-3 items-end">
+            <div className="flex gap-3 items-center">
               {/* Gamified Text area */}
               <div className="flex-1 relative">
                 <textarea

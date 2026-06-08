@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bot, Send, Mic, MicOff, Trash2, Sparkles, BookOpen, Brain,
   MessageSquare, Globe, PenLine, Volume2, Copy, Check,
-  Menu, Loader2
+  Menu, Loader2, X
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
@@ -226,7 +226,7 @@ const Chat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [activeMode, setActiveMode] = useState('general');
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(false);
   const [sessionCount, setSessionCount] = useState(0);
 
   const messagesEndRef = useRef(null);
@@ -335,34 +335,54 @@ const Chat = () => {
       {/* ═══ SIDEBAR ═══ */}
       <AnimatePresence>
         {showSidebar && (
-          <motion.aside
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 280, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="shrink-0 border-r-2 border-[var(--color-surface-border)] flex flex-col overflow-hidden bg-[var(--color-bg)]/60"
-          >
-            {/* Sidebar header */}
-            <div className="p-4 border-b-2 border-[var(--color-surface-border)] bg-[var(--color-surface)] select-none">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-4 h-4 text-[var(--color-primary)] animate-pulse" />
-                <span className="font-black text-xs text-[var(--color-text)] uppercase tracking-wider">
-                  Chế Độ AI Chat
-                </span>
+          <>
+            {/* Mobile backdrop overlay */}
+            <div
+              onClick={() => setShowSidebar(false)}
+              className="fixed inset-0 z-20 bg-black/40 backdrop-blur-xs md:hidden"
+            />
+            <motion.aside
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 280, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="absolute md:relative z-30 left-0 top-0 h-full shrink-0 border-r-2 border-[var(--color-surface-border)] flex flex-col overflow-hidden bg-[var(--color-surface)] md:bg-[var(--color-bg)]/60 shadow-xl md:shadow-none"
+            >
+              {/* Sidebar header */}
+              <div className="p-4 border-b-2 border-[var(--color-surface-border)] bg-[var(--color-surface)] select-none flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="w-4 h-4 text-[var(--color-primary)] animate-pulse" />
+                    <span className="font-black text-xs text-[var(--color-text)] uppercase tracking-wider">
+                      Chế Độ AI Chat
+                    </span>
+                  </div>
+                  <p className="text-[9px] text-[var(--color-text-muted)] font-black uppercase tracking-wider">Tùy biến câu trả lời của AI</p>
+                </div>
+                <button
+                  onClick={() => setShowSidebar(false)}
+                  className="md:hidden p-1.5 rounded-xl border-2 border-[var(--color-surface-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg)] transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <p className="text-[9px] text-[var(--color-text-muted)] font-black uppercase tracking-wider">Tùy biến câu trả lời của AI</p>
-            </div>
 
-            {/* Mode list */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
-              {MODES.map((mode) => {
-                const isActive = activeMode === mode.id;
-                return (
-                  <motion.button
-                    key={mode.id}
-                    whileHover={{ x: 2 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => { setActiveMode(mode.id); inputRef.current?.focus(); }}
+              {/* Mode list */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
+                {MODES.map((mode) => {
+                  const isActive = activeMode === mode.id;
+                  return (
+                    <motion.button
+                      key={mode.id}
+                      whileHover={{ x: 2 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setActiveMode(mode.id);
+                        inputRef.current?.focus();
+                        if (window.innerWidth < 768) {
+                          setShowSidebar(false);
+                        }
+                      }}
                     className={`w-full text-left p-3 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${
                       isActive ? 'font-bold' : 'border-transparent hover:bg-[var(--color-surface-border)]/50'
                     }`}
@@ -403,47 +423,52 @@ const Chat = () => {
               </div>
             </div>
           </motion.aside>
+          </>
         )}
       </AnimatePresence>
 
       {/* ═══ CHAT AREA ═══ */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* ── Chat header ── */}
-        <div className="shrink-0 px-6 py-4 border-b-2 border-[var(--color-surface-border)] flex items-center justify-between bg-[var(--color-surface)] select-none z-10">
-          <div className="flex items-center gap-4">
+        <div className="shrink-0 px-4 py-3 md:px-6 md:py-4 border-b-2 border-[var(--color-surface-border)] flex items-center justify-between bg-[var(--color-surface)] select-none z-10">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               onClick={() => setShowSidebar((s) => !s)}
               className="p-2 rounded-xl border-2 border-[var(--color-surface-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text)] transition-all shrink-0 cursor-pointer"
             >
               <Menu className="w-4 h-4" />
             </button>
-            <div className="relative">
+            <div className="relative shrink-0">
               <div 
-                className="w-12 h-12 rounded-2xl flex items-center justify-center border-2 border-[var(--color-surface-border)]"
+                className="w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center border-2 border-[var(--color-surface-border)]"
                 style={{ background: currentMode.color + '15', color: currentMode.color }}
               >
                 {currentMode.icon}
               </div>
-              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#58cc02] rounded-full border-2 border-[var(--color-surface)] animate-pulse" />
             </div>
-            <div>
-              <h1 className="font-black text-base text-[var(--color-text)] uppercase tracking-wider flex items-center gap-2">
+            <div className="min-w-0">
+              <h1 className="font-black text-sm sm:text-base text-[var(--color-text)] uppercase tracking-wider truncate whitespace-nowrap">
                 Nexus AI Trợ Lý
               </h1>
-              <p className="text-xs text-[var(--color-text-muted)] font-bold flex items-center gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#58cc02]" />
-                {currentMode.label} · {isTyping ? 'Đang soạn...' : 'Đang hoạt động'}
+              <p className="text-[10px] sm:text-xs text-[var(--color-text-muted)] font-bold flex items-center gap-1.5 mt-0.5 truncate whitespace-nowrap">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#58cc02] shrink-0" />
+                <span>{currentMode.label}</span>
+                <span className="opacity-40">|</span>
+                <span className="truncate">{isTyping ? 'Đang soạn...' : 'Đang hoạt động'}</span>
               </p>
             </div>
           </div>
           
           <button
             onClick={handleClear}
-            className="hidden md:flex btn-3d-secondary py-2 px-4 text-xs hover:text-[var(--color-danger)]"
+            className="btn-3d-secondary p-2.5 md:py-2 md:px-4 text-xs hover:text-[var(--color-danger)] flex items-center gap-1.5 shrink-0"
+            title="Dọn dẹp trò chuyện"
           >
-            <Trash2 className="w-4 h-4" /> Dọn dẹp
+            <Trash2 className="w-4 h-4" />
+            <span className="hidden md:inline">Dọn dẹp</span>
           </button>
         </div>
+
 
         {/* ── Messages area ── */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[var(--color-bg)]/30 custom-scrollbar">
@@ -451,15 +476,6 @@ const Chat = () => {
           {/* Gamified Welcome Screen */}
           {messages.length === 1 && messages[0].isWelcome && (
             <div className="flex flex-col items-center justify-center h-full max-w-2xl mx-auto text-center px-4 pt-10 pb-4">
-              <div 
-                className="w-24 h-24 rounded-3xl flex items-center justify-center mb-6 shadow-sm border-4"
-                style={{ backgroundColor: currentMode.color + '15', borderColor: currentMode.color, color: currentMode.color }}
-              >
-                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
-                  {currentMode.icon}
-                </motion.div>
-              </div>
-              
               <h2 className="text-2xl font-black text-[var(--color-text)] mb-2 uppercase tracking-wide">
                 Bạn đã sẵn sàng?
               </h2>
@@ -538,7 +554,7 @@ const Chat = () => {
 
         {/* ── Gamified Input Bar ── */}
         <div className="shrink-0 p-4 border-t-2 border-[var(--color-surface-border)] bg-[var(--color-surface)]">
-          <div className="flex gap-3 items-end">
+          <div className="flex gap-3 items-center">
             {/* Voice button */}
             <button
               onClick={toggleListen}
@@ -568,7 +584,7 @@ const Chat = () => {
                     handleSend();
                   }
                 }}
-                placeholder={isListening ? '🎙️ AI đang nghe...' : 'Hỏi Nexus AI điều gì đó... (Enter để gửi)'}
+                placeholder={isListening ? '🎙️ AI đang nghe...' : 'Hỏi Nexus AI...'}
                 className="w-full bg-[var(--color-bg)] border-2 border-[var(--color-surface-border)] rounded-2xl px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary)] transition-colors resize-none leading-relaxed font-bold"
                 style={{ minHeight: '52px', maxHeight: '120px' }}
               />

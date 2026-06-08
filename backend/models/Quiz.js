@@ -36,6 +36,10 @@ const Quiz = sequelize.define('Quiz', {
     type: DataTypes.STRING,
     allowNull: true,
     defaultValue: null
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   }
 });
 

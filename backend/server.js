@@ -52,9 +52,17 @@ const connectDB = async () => {
     // Define associations
     const User = require('./models/User');
     const CommunityMessage = require('./models/CommunityMessage');
+    const Vocabulary = require('./models/Vocabulary');
+    const Quiz = require('./models/Quiz');
     
     User.hasMany(CommunityMessage, { foreignKey: 'userId' });
     CommunityMessage.belongsTo(User, { foreignKey: 'userId' });
+
+    User.hasMany(Vocabulary, { foreignKey: 'userId' });
+    Vocabulary.belongsTo(User, { foreignKey: 'userId' });
+
+    User.hasMany(Quiz, { foreignKey: 'userId' });
+    Quiz.belongsTo(User, { foreignKey: 'userId' });
 
     // Sync models
     await sequelize.sync({ alter: true });

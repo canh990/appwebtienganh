@@ -53,6 +53,13 @@ const AIHelper = () => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [bannerVisible, setBannerVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [messages, setMessages] = useState([
     {
       role: 'ai',
@@ -142,7 +149,7 @@ const AIHelper = () => {
         onClick={toggleOpen}
         className="fixed right-5 z-[9999] flex items-center justify-center cursor-pointer"
         style={{
-          bottom: bannerVisible ? '150px' : '24px',
+          bottom: bannerVisible ? (isMobile ? '222px' : '150px') : (isMobile ? '84px' : '24px'),
           transition: 'bottom 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
           filter: 'drop-shadow(0 4px 16px rgba(99,102,241,0.45))',
           border: 'none',
@@ -200,7 +207,7 @@ const AIHelper = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', bounce: 0.25, duration: 0.5 }}
-            className="fixed bottom-24 right-6 z-50 w-[350px] sm:w-[400px] h-[550px] max-h-[80vh] flex flex-col bg-[var(--color-surface)] border border-[var(--color-surface-border)] rounded-2xl shadow-2xl overflow-hidden"
+            className="fixed bottom-[156px] md:bottom-24 right-6 z-50 w-[350px] sm:w-[400px] h-[550px] max-h-[80vh] flex flex-col bg-[var(--color-surface)] border border-[var(--color-surface-border)] rounded-2xl shadow-2xl overflow-hidden"
           >
             {/* Header */}
             <div className="px-5 py-4 border-b border-[var(--color-surface-border)] bg-[var(--color-surface)]/80 backdrop-blur-md flex justify-between items-center shrink-0">
@@ -236,11 +243,10 @@ const AIHelper = () => {
                     <span className="text-[10px] font-medium text-[var(--color-text-muted)] mb-1 ml-1">AI Assistant</span>
                   )}
                   <div
-                    className={`p-3.5 rounded-2xl shadow-sm ${
-                      msg.role === 'user'
-                        ? 'bg-[var(--color-primary)] text-white rounded-tr-sm'
-                        : 'bg-[var(--color-surface)] border border-[var(--color-surface-border)] text-[var(--color-text)] rounded-tl-sm'
-                    }`}
+                    className={`p-3.5 rounded-2xl shadow-sm ${msg.role === 'user'
+                      ? 'bg-[var(--color-primary)] text-white rounded-tr-sm'
+                      : 'bg-[var(--color-surface)] border border-[var(--color-surface-border)] text-[var(--color-text)] rounded-tl-sm'
+                      }`}
                   >
                     {msg.role === 'user' ? (
                       <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text}</p>
@@ -275,9 +281,8 @@ const AIHelper = () => {
                 <div className="flex items-center gap-1 pr-2">
                   <button
                     onClick={toggleListen}
-                    className={`p-2 rounded-lg transition-colors ${
-                      isListening ? 'text-[var(--color-danger)] bg-[var(--color-danger)]/10 animate-pulse' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-border)]/50'
-                    }`}
+                    className={`p-2 rounded-lg transition-colors ${isListening ? 'text-[var(--color-danger)] bg-[var(--color-danger)]/10 animate-pulse' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-border)]/50'
+                      }`}
                     title="Nhập bằng giọng nói"
                   >
                     {isListening ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}

@@ -14,6 +14,11 @@ router.get('/themes', optionalAuth, async (req, res) => {
         'theme',
         [sequelize.fn('COUNT', sequelize.col('id')), 'count']
       ],
+      where: {
+        userId: {
+          [Op.or]: [null, req.user ? req.user.id : null]
+        }
+      },
       group: ['theme'],
       order: [[sequelize.fn('COUNT', sequelize.col('id')), 'DESC']]
     });
@@ -44,7 +49,7 @@ router.get('/themes', optionalAuth, async (req, res) => {
 });
 
 // GET /api/vocabulary — with pagination + optional theme & search filter
-router.get('/', async (req, res) => {
+router.get('/', optionalAuth, async (req, res) => {
   try {
     const page  = parseInt(req.query.page)  || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -52,7 +57,11 @@ router.get('/', async (req, res) => {
     const theme  = req.query.theme  || null;
     const search = req.query.search || null;
 
-    const where = {};
+    const where = {
+      userId: {
+        [Op.or]: [null, req.user ? req.user.id : null]
+      }
+    };
     if (theme)  where.theme = theme;
     if (search) {
       where[Op.or] = [
@@ -173,6 +182,10 @@ router.put('/:id', protect, async (req, res) => {
     const word = await Vocabulary.findByPk(req.params.id);
     if (!word) return res.status(404).json({ message: 'Không tìm thấy từ vựng' });
 
+    if (word.userId !== null && word.userId !== req.user.id) {
+      return res.status(403).json({ message: 'Không có quyền sửa từ vựng này' });
+    }
+
     const { word: wordText, ipa, meaning, type, example, theme, imageUrl } = req.body;
     if (!wordText || !ipa || !meaning || !type) {
       return res.status(400).json({ message: 'Vui lòng điền đầy đủ các thông tin bắt buộc (Từ, IPA, Nghĩa, Loại từ)' });
@@ -182,6 +195,7 @@ router.put('/:id', protect, async (req, res) => {
       where: {
         word: wordText.trim(),
         id: { [Op.ne]: word.id },
+        userId: { [Op.or]: [null, req.user.id] }
       },
     });
     if (duplicate) {
@@ -210,6 +224,10 @@ router.delete('/:id', protect, async (req, res) => {
     const word = await Vocabulary.findByPk(req.params.id);
     if (!word) return res.status(404).json({ message: 'Không tìm thấy từ vựng' });
 
+    if (word.userId !== null && word.userId !== req.user.id) {
+      return res.status(403).json({ message: 'Không có quyền xóa từ vựng này' });
+    }
+
     await word.destroy();
     res.json({ message: 'Đã xóa từ vựng thành công!' });
   } catch (error) {
@@ -227,12 +245,18 @@ router.post('/', protect, async (req, res) => {
     }
 
     // Kiểm tra xem từ đã tồn tại chưa
-    const existing = await Vocabulary.findOne({ where: { word: word.trim() } });
+    const existing = await Vocabulary.findOne({ 
+      where: { 
+        word: word.trim(),
+        userId: { [Op.or]: [null, req.user.id] }
+      } 
+    });
     if (existing) {
       return res.status(400).json({ message: 'Từ vựng này đã tồn tại trong cơ sở dữ liệu.' });
     }
 
     const newWord = await Vocabulary.create({
+      userId: req.user.id,
       word: word.trim(),
       ipa: ipa.trim(),
       meaning: meaning.trim(),

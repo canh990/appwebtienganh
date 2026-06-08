@@ -101,31 +101,31 @@ const playSound = (type) => {
 
 /* ── Theme config helper ── */
 const THEME_CONFIG = {
-  AI:       { color: '#a855f7', grad: 'from-purple-500 to-violet-700',      bg: '#a855f715', emoji: '🤖', level: 'Nâng cao' },
-  Cyber:    { color: '#0ea5e9', grad: 'from-sky-500 to-blue-700',           bg: '#0ea5e915', emoji: '🌐', level: 'Nâng cao' },
-  Cyberpunk:{ color: '#0ea5e9', grad: 'from-sky-400 to-cyan-700',           bg: '#0ea5e915', emoji: '🌐', level: 'Nâng cao' },
-  Tech:     { color: '#3b82f6', grad: 'from-blue-500 to-indigo-700',        bg: '#3b82f615', emoji: '⚙️', level: 'Cơ bản' },
-  Security: { color: '#ef4444', grad: 'from-red-500 to-rose-700',           bg: '#ef444415', emoji: '🛡️', level: 'Trung cấp' },
-  Network:  { color: '#22c55e', grad: 'from-green-500 to-emerald-700',      bg: '#22c55e15', emoji: '📡', level: 'Trung cấp' },
-  'Sci-Fi': { color: '#f59e0b', grad: 'from-amber-400 to-orange-600',       bg: '#f59e0b15', emoji: '🚀', level: 'Trung cấp' },
-  Data:     { color: '#06b6d4', grad: 'from-cyan-500 to-teal-700',          bg: '#06b6d415', emoji: '💾', level: 'Trung cấp' },
-  Hack:     { color: '#f97316', grad: 'from-orange-500 to-red-700',         bg: '#f9731615', emoji: '💻', level: 'Nâng cao' },
-  General:  { color: '#8b5cf6', grad: 'from-violet-500 to-purple-700',      bg: '#8b5cf615', emoji: '📚', level: 'Cơ bản' },
+  AI: { color: '#a855f7', grad: 'from-purple-500 to-violet-700', bg: '#a855f715', emoji: '🤖', level: 'Nâng cao' },
+  Cyber: { color: '#0ea5e9', grad: 'from-sky-500 to-blue-700', bg: '#0ea5e915', emoji: '🌐', level: 'Nâng cao' },
+  Cyberpunk: { color: '#0ea5e9', grad: 'from-sky-400 to-cyan-700', bg: '#0ea5e915', emoji: '🌐', level: 'Nâng cao' },
+  Tech: { color: '#3b82f6', grad: 'from-blue-500 to-indigo-700', bg: '#3b82f615', emoji: '⚙️', level: 'Cơ bản' },
+  Security: { color: '#ef4444', grad: 'from-red-500 to-rose-700', bg: '#ef444415', emoji: '🛡️', level: 'Trung cấp' },
+  Network: { color: '#22c55e', grad: 'from-green-500 to-emerald-700', bg: '#22c55e15', emoji: '📡', level: 'Trung cấp' },
+  'Sci-Fi': { color: '#f59e0b', grad: 'from-amber-400 to-orange-600', bg: '#f59e0b15', emoji: '🚀', level: 'Trung cấp' },
+  Data: { color: '#06b6d4', grad: 'from-cyan-500 to-teal-700', bg: '#06b6d415', emoji: '💾', level: 'Trung cấp' },
+  Hack: { color: '#f97316', grad: 'from-orange-500 to-red-700', bg: '#f9731615', emoji: '💻', level: 'Nâng cao' },
+  General: { color: '#8b5cf6', grad: 'from-violet-500 to-purple-700', bg: '#8b5cf615', emoji: '📚', level: 'Cơ bản' },
   'Space Travel': { color: '#6366f1', grad: 'from-indigo-500 to-purple-700', bg: '#6366f115', emoji: '🌌', level: 'Trung cấp' },
-  Animals:  { color: '#10b981', grad: 'from-emerald-400 to-teal-600',       bg: '#10b98115', emoji: '🦁', level: 'Cơ bản' },
-  Cooking:  { color: '#f59e0b', grad: 'from-amber-400 to-orange-600',       bg: '#f59e0b15', emoji: '🍳', level: 'Cơ bản' },
+  Animals: { color: '#10b981', grad: 'from-emerald-400 to-teal-600', bg: '#10b98115', emoji: '🦁', level: 'Cơ bản' },
+  Cooking: { color: '#f59e0b', grad: 'from-amber-400 to-orange-600', bg: '#f59e0b15', emoji: '🍳', level: 'Cơ bản' },
   'Job Interview': { color: '#6366f1', grad: 'from-indigo-500 to-purple-700', bg: '#6366f115', emoji: '💼', level: 'Nâng cao' },
-  Business: { color: '#3b82f6', grad: 'from-blue-500 to-indigo-700',        bg: '#3b82f615', emoji: '📈', level: 'Trung cấp' },
-  Travel:   { color: '#06b6d4', grad: 'from-cyan-500 to-teal-700',          bg: '#06b6d415', emoji: '✈️', level: 'Cơ bản' },
-  Music:    { color: '#ec4899', grad: 'from-pink-500 to-rose-700',          bg: '#ec489915', emoji: '🎵', level: 'Cơ bản' },
-  Sports:   { color: '#22c55e', grad: 'from-green-500 to-emerald-700',      bg: '#22c55e15', emoji: '⚽', level: 'Cơ bản' },
-  'Modern Tech': { color: '#3b82f6', grad: 'from-blue-500 to-indigo-700',   bg: '#3b82f615', emoji: '⚙️', level: 'Trung cấp' }
+  Business: { color: '#3b82f6', grad: 'from-blue-500 to-indigo-700', bg: '#3b82f615', emoji: '📈', level: 'Trung cấp' },
+  Travel: { color: '#06b6d4', grad: 'from-cyan-500 to-teal-700', bg: '#06b6d415', emoji: '✈️', level: 'Cơ bản' },
+  Music: { color: '#ec4899', grad: 'from-pink-500 to-rose-700', bg: '#ec489915', emoji: '🎵', level: 'Cơ bản' },
+  Sports: { color: '#22c55e', grad: 'from-green-500 to-emerald-700', bg: '#22c55e15', emoji: '⚽', level: 'Cơ bản' },
+  'Modern Tech': { color: '#3b82f6', grad: 'from-blue-500 to-indigo-700', bg: '#3b82f615', emoji: '⚙️', level: 'Trung cấp' }
 };
 
 const getThemeConfig = (t) => {
   if (!t || t === '__all__') return { color: '#6366f1', grad: 'from-indigo-500 to-purple-700', bg: '#6366f115', emoji: '🌍', level: 'Tất cả' };
   if (t === '__favorites__') return { color: '#ef4444', grad: 'from-rose-500 to-pink-700', bg: '#ef444415', emoji: '❤️', level: 'Đặc biệt' };
-  
+
   const key = Object.keys(THEME_CONFIG).find(k => k.toLowerCase() === t.trim().toLowerCase());
   if (key) return THEME_CONFIG[key];
 
@@ -150,9 +150,9 @@ const getThemeConfig = (t) => {
 
 /* ── Question type badge ─────────────────────────────────────────────────── */
 const TYPE_META = {
-  multiple_choice: { label: 'Trắc Nghiệm',   icon: <ListChecks className="w-3.5 h-3.5" />, color: 'var(--color-primary)' },
-  fill_in_blank:   { label: 'Điền Chỗ Trống', icon: <PenLine    className="w-3.5 h-3.5" />, color: 'var(--color-accent)' },
-  listening:       { label: 'Nghe & Viết',    icon: <Headphones className="w-3.5 h-3.5" />, color: '#ff9600' },
+  multiple_choice: { label: 'Trắc Nghiệm', icon: <ListChecks className="w-3.5 h-3.5" />, color: 'var(--color-primary)' },
+  fill_in_blank: { label: 'Điền Chỗ Trống', icon: <PenLine className="w-3.5 h-3.5" />, color: 'var(--color-accent)' },
+  listening: { label: 'Nghe & Viết', icon: <Headphones className="w-3.5 h-3.5" />, color: '#ff9600' },
 };
 
 const TypeBadge = ({ type }) => {
@@ -190,13 +190,13 @@ const ResultScreen = ({ score, total, answers, questions, onRestart, selectedThe
   const pct = Math.round((score / total) * 100);
   const rank = pct >= 90 ? { label: 'Xuất Sắc 🏆', color: '#ffc800', icon: '🥇' }
     : pct >= 70 ? { label: 'Tuyệt Vời ⚡', color: 'var(--color-primary)', icon: '🥈' }
-    : pct >= 50 ? { label: 'Đạt Yêu Cầu 🎯', color: '#58cc02', icon: '🥉' }
-    : { label: 'Cố Gắng Lên 💡', color: '#ff4b4b', icon: '💪' };
+      : pct >= 50 ? { label: 'Đạt Yêu Cầu 🎯', color: '#58cc02', icon: '🥉' }
+        : { label: 'Cố Gắng Lên 💡', color: '#ff4b4b', icon: '💪' };
 
   // Calculate achievements/badges
   const correctTimes = timeRecords.filter((_, idx) => answers[idx]?.correct);
   const avgTime = correctTimes.length > 0 ? (correctTimes.reduce((a, b) => a + b, 0) / correctTimes.length) : 999;
-  
+
   const badges = [];
   if (score === total && total > 0) {
     badges.push({ name: 'Thiên tài hoàn hảo', emoji: '🏆', desc: 'Đạt điểm tuyệt đối 100%', color: 'from-amber-400 to-yellow-600' });
@@ -253,9 +253,9 @@ const ResultScreen = ({ score, total, answers, questions, onRestart, selectedThe
 
         <div className="grid grid-cols-3 gap-4 mb-6">
           {[
-            { label: 'Đúng',   value: score,         color: 'text-green-600', bg: 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900' },
-            { label: 'Sai',    value: total - score,  color: 'text-red-500',   bg: 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900' },
-            { label: 'Tổng số',value: total,          color: 'text-[var(--color-text)]', bg: 'bg-[var(--color-bg)] border-[var(--color-surface-border)]' },
+            { label: 'Đúng', value: score, color: 'text-green-600', bg: 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900' },
+            { label: 'Sai', value: total - score, color: 'text-red-500', bg: 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900' },
+            { label: 'Tổng số', value: total, color: 'text-[var(--color-text)]', bg: 'bg-[var(--color-bg)] border-[var(--color-surface-border)]' },
           ].map((s) => (
             <div key={s.label} className={`rounded-2xl border-2 p-3 text-center ${s.bg}`}>
               <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
@@ -314,11 +314,10 @@ const ResultScreen = ({ score, total, answers, questions, onRestart, selectedThe
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.06 }}
-                className={`flex items-start gap-3.5 p-3.5 rounded-2xl border-2 ${
-                  correct
+                className={`flex items-start gap-3.5 p-3.5 rounded-2xl border-2 ${correct
                     ? 'border-green-200 bg-green-50/50 dark:border-green-950/30 dark:bg-green-950/10'
                     : 'border-red-200 bg-red-50/50 dark:border-red-950/30 dark:bg-red-950/10'
-                }`}
+                  }`}
               >
                 <div className="mt-0.5 shrink-0 select-none">
                   {correct
@@ -420,9 +419,8 @@ const ThemeLobby = ({ quizThemes, vocabThemes, onStart, onSeed, onAIGenerate, se
                   whileTap={{ scale: 0.97 }}
                   onClick={() => onStart(isAll ? '' : theme)}
                   disabled={count === 0 && !isAll}
-                  className={`relative overflow-hidden rounded-2xl p-4 text-left transition-all shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-                    isAll ? 'col-span-2 sm:col-span-1' : ''
-                  }`}
+                  className={`relative overflow-hidden rounded-2xl p-4 text-left transition-all shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${isAll ? 'col-span-2 sm:col-span-1' : ''
+                    }`}
                   style={{
                     background: `linear-gradient(135deg, ${cfg.color}22 0%, ${cfg.color}08 100%)`,
                     border: `2px solid ${cfg.color}30`,
@@ -498,27 +496,27 @@ const ThemeLobby = ({ quizThemes, vocabThemes, onStart, onSeed, onAIGenerate, se
 /* ── Main Quiz component ─────────────────────────────────────────────────── */
 const Quiz = () => {
   const { user } = useAuth();
-  const [questions, setQuestions]     = useState([]);
-  const [quizThemes, setQuizThemes]   = useState([]);
+  const [questions, setQuestions] = useState([]);
+  const [quizThemes, setQuizThemes] = useState([]);
   const [vocabThemes, setVocabThemes] = useState([]);
   const [selectedTheme, setSelectedTheme] = useState(null); // null = lobby, '' = all, 'Tech' = specific
   const [showAIThemeModal, setShowAIThemeModal] = useState(false);
-  const [selectedAITheme, setSelectedAITheme]   = useState('Cyberpunk');
-  const [customAITheme, setCustomAITheme]       = useState('');
-  const [aiLoading, setAiLoading]   = useState(false);
-  const [currentQ, setCurrentQ]     = useState(0);
+  const [selectedAITheme, setSelectedAITheme] = useState('Cyberpunk');
+  const [customAITheme, setCustomAITheme] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [currentQ, setCurrentQ] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
-  const [typedAnswer, setTypedAnswer]       = useState('');
-  const [isAnswered, setIsAnswered]         = useState(false);
-  const [answers, setAnswers]   = useState([]);
-  const [score, setScore]       = useState(0);
+  const [typedAnswer, setTypedAnswer] = useState('');
+  const [isAnswered, setIsAnswered] = useState(false);
+  const [answers, setAnswers] = useState([]);
+  const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState(null);
-  const [seeding, setSeeding]   = useState(false);
-  const [streak, setStreak]     = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [seeding, setSeeding] = useState(false);
+  const [streak, setStreak] = useState(0);
   const [loadingThemes, setLoadingThemes] = useState(true);
-  
+
   // Pre-game settings & Survival mode states
   const [setupTheme, setSetupTheme] = useState(null);
   const [questionCount, setQuestionCount] = useState(10);
@@ -960,11 +958,10 @@ const Quiz = () => {
                           {Array.from({ length: 3 }).map((_, i) => (
                             <Heart
                               key={i}
-                              className={`w-3.5 h-3.5 ${
-                                i < lives
+                              className={`w-3.5 h-3.5 ${i < lives
                                   ? 'text-red-500 fill-current animate-pulse-slow'
                                   : 'text-gray-300 dark:text-slate-700'
-                              }`}
+                                }`}
                             />
                           ))}
                         </div>
@@ -1023,7 +1020,7 @@ const Quiz = () => {
                       )}
 
                       <div className="p-6 pt-8">
-                         <div className="flex justify-between items-center mb-5">
+                        <div className="flex justify-between items-center mb-5">
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] font-black text-[var(--color-text-muted)] uppercase tracking-wider">
                               Câu hỏi {currentQ + 1} / {questions.length}
@@ -1098,7 +1095,7 @@ const Quiz = () => {
                                     style={{
                                       background: isAnswered && idx === q.answerIndex ? 'rgba(88,204,2,0.15)'
                                         : isAnswered && idx === selectedOption ? 'rgba(255,75,75,0.15)'
-                                        : 'rgba(0,0,0,0.02)',
+                                          : 'rgba(0,0,0,0.02)',
                                     }}
                                   >
                                     {String.fromCharCode(65 + idx)}
@@ -1125,13 +1122,12 @@ const Quiz = () => {
                               }}
                               disabled={isAnswered}
                               placeholder="Điền từ còn thiếu vào đây rồi ấn Enter..."
-                              className={`w-full rounded-2xl border-2 py-4 px-5 text-[var(--color-text)] bg-[var(--color-surface)] focus:outline-none font-bold text-sm transition-all placeholder:text-[var(--color-text-muted)] ${
-                                !isAnswered
+                              className={`w-full rounded-2xl border-2 py-4 px-5 text-[var(--color-text)] bg-[var(--color-surface)] focus:outline-none font-bold text-sm transition-all placeholder:text-[var(--color-text-muted)] ${!isAnswered
                                   ? 'border-[var(--color-surface-border)] focus:border-[var(--color-primary)]'
                                   : typedAnswer.toLowerCase().trim() === q.correctAnswer?.toLowerCase().trim()
                                     ? 'border-green-300 bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 dark:border-green-900'
                                     : 'border-red-300 bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900'
-                              }`}
+                                }`}
                             />
                             {!isAnswered && typedAnswer.trim() && (
                               <button
@@ -1167,11 +1163,10 @@ const Quiz = () => {
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: 150, opacity: 0 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-                        className={`fixed bottom-0 left-0 right-0 z-50 py-5 px-6 border-t-4 shadow-2xl flex items-center justify-between ${
-                          isCorrectAnswer
+                        className={`fixed bottom-0 left-0 right-0 z-50 py-5 px-6 border-t-4 shadow-2xl flex items-center justify-between ${isCorrectAnswer
                             ? 'bg-green-50 dark:bg-green-950 border-green-500 text-green-800 dark:text-green-200'
                             : 'bg-red-50 dark:bg-red-950 border-red-500 text-red-800 dark:text-red-200'
-                        }`}
+                          }`}
                       >
                         <div className="max-w-4xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-4">
                           <div className="flex items-center gap-4 text-left w-full md:w-auto">
@@ -1196,9 +1191,8 @@ const Quiz = () => {
                           </div>
                           <button
                             onClick={isOutOfLives ? endQuizEarly : nextQuestion}
-                            className={`w-full md:w-auto select-none py-3 px-8 text-xs font-black rounded-2xl uppercase tracking-wider ${
-                              isCorrectAnswer ? 'btn-3d-success' : 'btn-3d-danger'
-                            }`}
+                            className={`w-full md:w-auto select-none py-3 px-8 text-xs font-black rounded-2xl uppercase tracking-wider ${isCorrectAnswer ? 'btn-3d-success' : 'btn-3d-danger'
+                              }`}
                           >
                             {isOutOfLives || currentQ >= questions.length - 1 ? 'Xem kết quả' : 'Tiếp tục'}
                           </button>
@@ -1275,11 +1269,10 @@ const Quiz = () => {
                       <button
                         key={num}
                         onClick={() => setQuestionCount(num)}
-                        className={`py-2 rounded-xl border-2 text-xs font-bold transition-all cursor-pointer ${
-                          questionCount === num
+                        className={`py-2 rounded-xl border-2 text-xs font-bold transition-all cursor-pointer ${questionCount === num
                             ? 'bg-sky-50 dark:bg-sky-950/40 text-[var(--color-primary)] border-[var(--color-primary)] shadow-sm'
                             : 'bg-[var(--color-bg)] border-[var(--color-surface-border)] text-[var(--color-text-muted)] hover:border-gray-300 dark:hover:border-slate-700'
-                        }`}
+                          }`}
                       >
                         {num} câu
                       </button>
@@ -1297,11 +1290,10 @@ const Quiz = () => {
                       <button
                         key={sec}
                         onClick={() => setTimerDuration(sec)}
-                        className={`py-2 rounded-xl border-2 text-xs font-bold transition-all cursor-pointer ${
-                          timerDuration === sec
+                        className={`py-2 rounded-xl border-2 text-xs font-bold transition-all cursor-pointer ${timerDuration === sec
                             ? 'bg-sky-50 dark:bg-sky-950/40 text-[var(--color-primary)] border-[var(--color-primary)] shadow-sm'
                             : 'bg-[var(--color-bg)] border-[var(--color-surface-border)] text-[var(--color-text-muted)] hover:border-gray-300 dark:hover:border-slate-700'
-                        }`}
+                          }`}
                       >
                         {sec === 99999 ? 'Vô hạn' : `${sec}s`}
                       </button>
@@ -1322,11 +1314,10 @@ const Quiz = () => {
                       <button
                         key={m.id}
                         onClick={() => setGameMode(m.id)}
-                        className={`p-3 rounded-xl border-2 text-xs font-bold transition-all text-left flex flex-col justify-between cursor-pointer ${
-                          gameMode === m.id
+                        className={`p-3 rounded-xl border-2 text-xs font-bold transition-all text-left flex flex-col justify-between cursor-pointer ${gameMode === m.id
                             ? 'bg-sky-50 dark:bg-sky-950/40 text-[var(--color-primary)] border-[var(--color-primary)] shadow-sm'
                             : 'bg-[var(--color-bg)] border-[var(--color-surface-border)] text-[var(--color-text-muted)] hover:border-gray-300 dark:hover:border-slate-700'
-                        }`}
+                          }`}
                       >
                         <span>{m.label}</span>
                         <span className="text-[9px] opacity-70 font-normal mt-0.5">{m.desc}</span>
@@ -1434,11 +1425,10 @@ const Quiz = () => {
                           onClick={() => {
                             setCustomAITheme(item.value);
                           }}
-                          className={`px-2.5 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                            isSelected
+                          className={`px-2.5 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${isSelected
                               ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-sm'
                               : 'bg-[var(--color-bg)] border-[var(--color-surface-border)] text-[var(--color-text-muted)] hover:border-gray-300 dark:hover:border-slate-700'
-                          }`}
+                            }`}
                         >
                           {item.label}
                         </button>

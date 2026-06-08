@@ -13,7 +13,13 @@ router.get('/me', protect, async (req, res) => {
     });
     if (!user) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
 
-    const totalVocab = await Vocabulary.count();
+    const totalVocab = await Vocabulary.count({
+      where: {
+        userId: {
+          [Op.or]: [null, req.user.id]
+        }
+      }
+    });
 
     res.json({
       id: user.id,
