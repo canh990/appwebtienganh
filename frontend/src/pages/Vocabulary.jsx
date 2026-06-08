@@ -6,7 +6,7 @@ import {
   GraduationCap, ArrowLeft, CheckCircle, Target, Zap,
   RotateCcw, Plus, Pencil, Trash2, Brain
 } from 'lucide-react';
-import { getVocabulary, getThemes, toggleFavoriteWord, createVocabulary, updateVocabulary, deleteVocabulary, getFavoriteVocabulary, getLearnedWordIds, markWordLearned } from '../services/vocabularyService';
+import { getVocabulary, getThemes, toggleFavoriteWord, createVocabulary, updateVocabulary, deleteVocabulary, deleteTheme, getFavoriteVocabulary, getLearnedWordIds, markWordLearned } from '../services/vocabularyService';
 import { generateAIWords } from '../services/seedService';
 import { submitQuiz } from '../services/quizService';
 import { getMyStats } from '../services/statsService';
@@ -736,7 +736,7 @@ const StudySession = ({ theme, themeColor, onExit, favorites, onToggleFav, learn
    THEME SELECTOR — màn hình chọn chủ đề dạng khóa học
    Lấy cảm hứng từ Duolingo & Elsa: Thêm Badge Cấp Độ và thanh tiến trình đã học
 ═══════════════════════════════════════════════════════════════════════════ */
-const ThemeSelector = ({ themes, onSelectTheme, user }) => {
+const ThemeSelector = ({ themes, onSelectTheme, onDeleteTheme, user }) => {
   if (themes.length === 0) return (
     <div className="text-center py-16 bg-[var(--color-surface)] rounded-2xl border-2 border-[var(--color-surface-border)] p-8">
       <p className="text-[var(--color-text-muted)] font-bold">Chưa tìm thấy chủ đề học nào. Vui lòng bấm AI sinh từ vựng mới!</p>
@@ -759,15 +759,31 @@ const ThemeSelector = ({ themes, onSelectTheme, user }) => {
           >
             <div className="p-5 flex-1">
               {/* Header inside course card */}
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex justify-between items-start mb-4 relative">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-sm border border-[var(--color-surface-border)]" style={{ background: cfg.bg }}>
                   {cfg.emoji}
                 </div>
 
-                {/* Level badge */}
-                <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-lg border tracking-wider select-none ${levelBadgeStyle}`}>
-                  {cfg.level}
-                </span>
+                <div className="relative h-7 flex items-center">
+                  {/* Level badge */}
+                  <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-lg border tracking-wider select-none transition-all duration-200 group-hover:opacity-0 group-hover:scale-95 ${levelBadgeStyle}`}>
+                    {cfg.level}
+                  </span>
+
+                  {/* Delete theme button */}
+                  {user && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteTheme(theme);
+                      }}
+                      className="absolute right-0 p-1.5 rounded-lg border-2 border-[var(--color-surface-border)] hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200 opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 cursor-pointer bg-[var(--color-surface)] shadow-sm"
+                      title="Xóa chủ đề"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               <h3 className="font-black text-lg mb-1 text-[var(--color-text)]">
@@ -1140,6 +1156,21 @@ const Vocabulary = () => {
     }
   };
 
+  const handleDeleteTheme = async (themeName) => {
+    if (!user) return toast.error('Bạn cần đăng nhập để xóa chủ đề!');
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa toàn bộ chủ đề "${themeName}" không? Hành động này sẽ xóa tất cả từ vựng và bài trắc nghiệm thuộc chủ đề này và không thể hoàn tác.`)) {
+      return;
+    }
+    const id = toast.loading(`Đang xóa chủ đề "${themeName}"...`);
+    try {
+      await deleteTheme(themeName);
+      toast.success(`Đã xóa chủ đề "${themeName}" thành công!`, { id });
+      await refreshWordLists();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Lỗi khi xóa chủ đề.', { id });
+    }
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!user) return toast.error('Bạn cần đăng nhập để thực hiện!');
@@ -1331,6 +1362,7 @@ const Vocabulary = () => {
             <ThemeSelector
               themes={themes}
               onSelectTheme={(theme, color) => { setStudyTheme(theme); setStudyThemeColor(color); }}
+              onDeleteTheme={handleDeleteTheme}
               user={user}
             />
           </motion.div>

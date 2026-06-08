@@ -272,4 +272,31 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
+// DELETE /api/vocabulary/theme/:themeName — delete a whole theme (protected)
+router.delete('/theme/:themeName', protect, async (req, res) => {
+  try {
+    const { themeName } = req.params;
+
+    // Delete all vocabulary of this theme for this user or default
+    await Vocabulary.destroy({
+      where: {
+        theme: themeName,
+        userId: { [Op.or]: [null, req.user.id] }
+      }
+    });
+
+    // Delete all quizzes of this theme for this user or default
+    await Quiz.destroy({
+      where: {
+        theme: themeName,
+        userId: { [Op.or]: [null, req.user.id] }
+      }
+    });
+
+    res.json({ message: `Đã xóa chủ đề "${themeName}" thành công!` });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi xóa chủ đề', error: error.message });
+  }
+});
+
 module.exports = router;

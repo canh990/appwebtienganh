@@ -47,3 +47,8 @@ export const deleteVocabulary = async (wordId) => {
   const response = await api.delete(`/vocabulary/${wordId}`);
   return response.data;
 };
+
+export const deleteTheme = async (themeName) => {
+  const response = await api.delete(`/vocabulary/theme/${encodeURIComponent(themeName)}`);
+  return response.data;
+};
