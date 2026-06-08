@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Vocabulary = require('../models/Vocabulary');
+const Quiz = require('../models/Quiz');
 const User = require('../models/User');
 const { protect, optionalAuth } = require('../middleware/auth');
 const { Op } = require('sequelize');
