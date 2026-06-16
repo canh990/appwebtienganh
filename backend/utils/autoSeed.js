@@ -77,6 +77,7 @@ const sampleQuizzes = [
 const autoSeedIfEmpty = async () => {
   try {
     const quizCount = await Quiz.count();
+    const vocabCount = await Vocabulary.count();
 
     if (quizCount > 0) {
       // Kiểm tra xem có bản ghi nào có theme hợp lệ không
@@ -85,6 +86,12 @@ const autoSeedIfEmpty = async () => {
 
       if (withTheme > 0) {
         console.log(`📚 Ngân hàng câu hỏi đã có ${quizCount} câu (${withTheme} có chủ đề) — bỏ qua auto-seed.`);
+        // Nếu đã có Quiz nhưng Vocabulary bị rỗng (do lỗi seed lần trước), ta seed bổ sung
+        if (vocabCount === 0) {
+          console.log('🌱 Phát hiện bảng từ vựng rỗng, đang seed bổ sung...');
+          await Vocabulary.bulkCreate(sampleWords);
+          console.log(`✅ Đã seed bổ sung ${sampleWords.length} từ vựng mẫu.`);
+        }
         return;
       }
 
@@ -94,17 +101,19 @@ const autoSeedIfEmpty = async () => {
       await Vocabulary.destroy({ where: {} });
     } else {
       console.log('🌱 Ngân hàng câu hỏi rỗng — đang tự động seed dữ liệu mẫu...');
+      // Xóa sạch từ vựng để tránh duplicate nếu còn sót
+      await Vocabulary.destroy({ where: {} });
     }
 
-    // Seed từ vựng
-    await Vocabulary.bulkCreate(sampleWords, { ignoreDuplicates: true });
+    // Seed từ vựng (bỏ ignoreDuplicates vì PostgreSQL yêu cầu unique constraint để chạy ON CONFLICT)
+    await Vocabulary.bulkCreate(sampleWords);
     console.log(`✅ Đã seed ${sampleWords.length} từ vựng mẫu.`);
 
     // Seed câu hỏi quiz
     await Quiz.bulkCreate(sampleQuizzes);
     console.log(`✅ Đã seed ${sampleQuizzes.length} câu hỏi quiz với đầy đủ chủ đề.`);
   } catch (err) {
-    console.error('⚠️ Lỗi auto-seed (không nghiêm trọng):', err.message);
+    console.error('❌ Lỗi auto-seed:', err.message);
   }
 };
 
