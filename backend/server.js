@@ -47,7 +47,7 @@ const connectDB = async () => {
     await sequelize.ensureDatabaseExists();
 
     await sequelize.authenticate();
-    console.log('✅ Kết nối cơ sở dữ liệu MySQL thành công!');
+    console.log('✅ Kết nối cơ sở dữ liệu PostgreSQL thành công!');
     
     // Define associations
     const User = require('./models/User');
@@ -57,21 +57,21 @@ const connectDB = async () => {
     
     User.hasMany(CommunityMessage, { foreignKey: 'userId' });
     CommunityMessage.belongsTo(User, { foreignKey: 'userId' });
-
+ 
     User.hasMany(Vocabulary, { foreignKey: 'userId' });
     Vocabulary.belongsTo(User, { foreignKey: 'userId' });
-
+ 
     User.hasMany(Quiz, { foreignKey: 'userId' });
     Quiz.belongsTo(User, { foreignKey: 'userId' });
-
+ 
     // Sync models
     await sequelize.sync({ alter: true });
     console.log('⚡ Tất cả các bảng cơ sở dữ liệu đã được đồng bộ hóa.');
-
+ 
     // Tự động seed nếu bảng Quiz rỗng
     await autoSeedIfEmpty();
   } catch (err) {
-    console.error('❌ Lỗi kết nối cơ sở dữ liệu MySQL:', err);
+    console.error('❌ Lỗi kết nối cơ sở dữ liệu PostgreSQL:', err);
     process.exit(1);
   }
 };

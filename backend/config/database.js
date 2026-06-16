@@ -1,38 +1,22 @@
 const { Sequelize } = require('sequelize');
-const mysql = require('mysql2/promise');
 const dotenv = require('dotenv');
 dotenv.config();
 
 const dbName = process.env.DB_NAME || 'cyberlingo';
-const dbUser = process.env.DB_USER || 'root';
+const dbUser = process.env.DB_USER || 'postgres';
 const dbPass = process.env.DB_PASS || '';
 const dbHost = process.env.DB_HOST || 'localhost';
-const dbPort = process.env.DB_PORT || 3306;
+const dbPort = process.env.DB_PORT || 5432;
 
 const ensureDatabaseExists = async () => {
-  if (process.env.DATABASE_URL) {
-    // Không cần tạo database khi sử dụng PostgreSQL của Render vì Render tạo sẵn
-    return;
-  }
-  try {
-    const connection = await mysql.createConnection({
-      host: dbHost,
-      port: dbPort,
-      user: dbUser,
-      password: dbPass
-    });
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\`;`);
-    await connection.end();
-    console.log(`✅ Đã đảm bảo cơ sở dữ liệu "${dbName}" tồn tại.`);
-  } catch (err) {
-    console.error('❌ Lỗi khi tự động tạo cơ sở dữ liệu:', err.message);
-  }
+  // Đối với PostgreSQL, giả định database đã được tạo sẵn ở môi trường local hoặc tự động tạo trên Render.
+  return;
 };
 
 let sequelize;
 
 if (process.env.DATABASE_URL) {
-  console.log('🔄 Đang kết nối tới PostgreSQL database...');
+  console.log('🔄 Đang kết nối tới PostgreSQL database qua DATABASE_URL...');
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     dialectOptions: {
@@ -47,7 +31,7 @@ if (process.env.DATABASE_URL) {
     }
   });
 } else {
-  console.log('🔄 Đang kết nối tới MySQL database...');
+  console.log('🔄 Đang kết nối tới PostgreSQL database local...');
   sequelize = new Sequelize(
     dbName,
     dbUser,
@@ -55,7 +39,7 @@ if (process.env.DATABASE_URL) {
     {
       host: dbHost,
       port: dbPort,
-      dialect: 'mysql',
+      dialect: 'postgres',
       logging: false,
       define: {
         timestamps: true
@@ -66,4 +50,3 @@ if (process.env.DATABASE_URL) {
 
 sequelize.ensureDatabaseExists = ensureDatabaseExists;
 module.exports = sequelize;
-
