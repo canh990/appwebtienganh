@@ -1,3 +1,9 @@
+databases:
+  - name: cyberlingo-db
+    databaseName: cyberlingo
+    user: cyberlingo_user
+    plan: free
+
 services:
   - type: web
     name: cyberlingo-backend
@@ -13,17 +19,11 @@ services:
         value: 10000
       - key: JWT_SECRET
         value: cyberlingo-super-secret-key-2026
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cyberlingo-db
+          property: connectionString
       - key: GEMINI_API_KEY
         sync: false
-      - key: DB_HOST
-        sync: false
-      - key: DB_USER
-        sync: false
-      - key: DB_PASS
-        sync: false
-      - key: DB_NAME
-        sync: false
-      - key: DB_PORT
-        value: 3306
       - key: FRONTEND_URL
-        sync: false
+        value: https://frontend-canh-s-projects3.vercel.app

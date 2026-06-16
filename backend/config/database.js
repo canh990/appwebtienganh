@@ -10,6 +10,10 @@ const dbHost = process.env.DB_HOST || 'localhost';
 const dbPort = process.env.DB_PORT || 3306;
 
 const ensureDatabaseExists = async () => {
+  if (process.env.DATABASE_URL) {
+    // Không cần tạo database khi sử dụng PostgreSQL của Render vì Render tạo sẵn
+    return;
+  }
   try {
     const connection = await mysql.createConnection({
       host: dbHost,
@@ -25,20 +29,41 @@ const ensureDatabaseExists = async () => {
   }
 };
 
-const sequelize = new Sequelize(
-  dbName,
-  dbUser,
-  dbPass,
-  {
-    host: dbHost,
-    port: dbPort,
-    dialect: 'mysql',
+let sequelize;
+
+if (process.env.DATABASE_URL) {
+  console.log('🔄 Đang kết nối tới PostgreSQL database...');
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
     logging: false,
     define: {
       timestamps: true
     }
-  }
-);
+  });
+} else {
+  console.log('🔄 Đang kết nối tới MySQL database...');
+  sequelize = new Sequelize(
+    dbName,
+    dbUser,
+    dbPass,
+    {
+      host: dbHost,
+      port: dbPort,
+      dialect: 'mysql',
+      logging: false,
+      define: {
+        timestamps: true
+      }
+    }
+  );
+}
 
 sequelize.ensureDatabaseExists = ensureDatabaseExists;
 module.exports = sequelize;
+
