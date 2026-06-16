@@ -16,7 +16,7 @@ router.get('/themes', optionalAuth, async (req, res) => {
       ],
       where: { 
         theme: { [Op.not]: null },
-        userId: { [Op.or]: [null, req.user ? req.user.id : null] }
+        userId: req.user ? req.user.id : -1
       },
       group: ['theme'],
       order: [[sequelize.fn('COUNT', sequelize.col('id')), 'DESC']]
@@ -35,7 +35,7 @@ router.get('/random', optionalAuth, async (req, res) => {
     const theme = req.query.theme;
 
     const where = {
-      userId: { [Op.or]: [null, req.user ? req.user.id : null] }
+      userId: req.user ? req.user.id : -1
     };
     if (type && type !== 'all') where.type = type;
     if (theme && theme !== 'all') where.theme = theme;
