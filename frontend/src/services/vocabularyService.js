@@ -5,12 +5,15 @@ export const getVocabulary = async (page = 1, limit = 10, theme = '', search = '
   if (theme)  params.append('theme',  theme);
   if (search) params.append('search', search);
   const response = await api.get(`/vocabulary?${params}`);
+  if (response.data && response.data.words) {
+    response.data.words = response.data.words.filter(w => w.userId !== null);
+  }
   return response.data;
 };
 
 export const getThemes = async () => {
   const response = await api.get('/vocabulary/themes');
-  return response.data; // [{ theme, count }, ...]
+  return response.data.filter(t => t.count > 0);
 };
 
 export const toggleFavoriteWord = async (wordId) => {
