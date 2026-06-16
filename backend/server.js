@@ -68,8 +68,12 @@ const connectDB = async () => {
     await sequelize.sync({ alter: true });
     console.log('⚡ Tất cả các bảng cơ sở dữ liệu đã được đồng bộ hóa.');
  
-    // Tự động seed nếu bảng Quiz rỗng
-    await autoSeedIfEmpty();
+    // Xóa dữ liệu mẫu hệ thống (userId = null) để trang trống hoàn toàn khi chưa tự tạo
+    const Vocabulary = require('./models/Vocabulary');
+    const Quiz = require('./models/Quiz');
+    await Vocabulary.destroy({ where: { userId: null } });
+    await Quiz.destroy({ where: { userId: null } });
+    console.log('🧹 Đã xóa sạch toàn bộ từ vựng và câu hỏi mẫu mặc định của hệ thống.');
   } catch (err) {
     console.error('❌ Lỗi kết nối cơ sở dữ liệu PostgreSQL:', err);
     process.exit(1);
