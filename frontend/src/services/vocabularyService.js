@@ -12,8 +12,25 @@ export const getVocabulary = async (page = 1, limit = 10, theme = '', search = '
 };
 
 export const getThemes = async () => {
-  const response = await api.get('/vocabulary/themes');
-  return response.data.filter(t => t.count > 0);
+  try {
+    // Để đảm bảo trang trống khi chưa tự tạo từ vựng, ta tính toán theme trực tiếp từ từ vựng của người dùng
+    const vocabData = await getVocabulary(1, 1000);
+    const words = vocabData.words || [];
+    
+    const themeMap = {};
+    words.forEach(w => {
+      const t = w.theme || 'General';
+      if (!themeMap[t]) {
+        themeMap[t] = { theme: t, count: 0, learnedCount: 0 };
+      }
+      themeMap[t].count += 1;
+    });
+    
+    return Object.values(themeMap);
+  } catch (error) {
+    console.error('Lỗi khi tính toán themes ở frontend:', error);
+    return [];
+  }
 };
 
 export const toggleFavoriteWord = async (wordId) => {
